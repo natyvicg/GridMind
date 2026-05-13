@@ -1,0 +1,28 @@
+# environment.yml — Entorno conda para GridMind
+#
+# Crear el entorno:
+#   conda env create -f environment.yml
+#
+# Activar:
+#   conda activate gridmind
+#
+# Actualizar si se agregan dependencias:
+#   conda env update -f environment.yml
+
+name: gridmind
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - pip
+  - pip:
+    - pandapower>=3.0
+    - anthropic>=0.90
+    - python-dotenv>=1.0
+    - pandas>=2.0
+    - openpyxl>=3.1
+    - matplotlib>=3.8
+    - xlsxwriter>=3.0
+    - numpy>=1.24
+    - scipy>=1.10
