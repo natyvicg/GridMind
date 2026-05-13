@@ -1,19 +1,19 @@
-# GridMind
+# PowerMind
 
-Agente de inteligencia artificial para análisis de sistemas eléctricos de potencia. GridMind integra un LLM (Claude, Anthropic) con PandaPower para responder consultas técnicas en lenguaje natural sobre redes eléctricas, delegando todos los cálculos numéricos al simulador.
+Agente de inteligencia artificial para análisis de sistemas eléctricos de potencia. PowerMind integra un LLM (Claude, Anthropic) con PandaPower para responder consultas técnicas en lenguaje natural sobre redes eléctricas, delegando todos los cálculos numéricos al simulador.
 
 Desarrollado como Trabajo Final de Graduación (TFG) para la Licenciatura en Ingeniería Eléctrica, Universidad de Costa Rica.
 
 ## Arquitectura
 
-GridMind usa el patrón **ReAct** (Reason + Act): el LLM razona sobre la consulta, decide qué herramienta de PandaPower usar, Python la ejecuta, y el resultado vuelve al LLM para que siga razonando o genere la respuesta final. El LLM nunca ejecuta código directamente ni inventa valores numéricos.
+PowerMind usa el patrón **ReAct** (Reason + Act): el LLM razona sobre la consulta, decide qué herramienta de PandaPower usar, Python la ejecuta, y el resultado vuelve al LLM para que siga razonando o genere la respuesta final. El LLM nunca ejecuta código directamente ni inventa valores numéricos.
 
 ```
 Usuario → [consulta en lenguaje natural]
            ↓
        agent.py (loop ReAct con Claude)
            ↓
-       tools.py (6 herramientas PandaPower)
+       tools.py (7 herramientas PandaPower)
            ↓
        PandaPower (cálculo real Newton-Raphson)
            ↓
@@ -30,6 +30,7 @@ Usuario → [consulta en lenguaje natural]
 | `disconnect_line` | Desconecta una línea (simulación N-1) |
 | `reconnect_line` | Reconecta una línea previamente desconectada |
 | `modify_load` | Modifica potencia activa/reactiva de una carga |
+| `list_available_networks` | Lista todas las redes disponibles en el catálogo |
 
 ## Requisitos
 
@@ -66,9 +67,10 @@ python main.py
 
 Aparece un prompt donde podés escribir consultas en lenguaje natural. Ejemplos:
 
-- *"Carga la red IEEE_14 y dame un resumen del estado"*
-- *"¿Qué pasa si desconecto la línea 1-5?"*
-- *"Para la red CR_Min, ¿cuántas barras presentan violaciones de tensión?"*
+- *"¿Qué redes tenés disponibles?"*
+- *"Carga la red IEEE_39 y dame un resumen del estado"*
+- *"¿Qué pasa si desconecto la línea 1-5 en IEEE_14?"*
+- *"Para la red CR_Min, ¿cuáles son las 5 peores violaciones de tensión?"*
 
 Comandos especiales: `/reset` (reiniciar red) | `/salir` (terminar).
 
@@ -87,12 +89,35 @@ python test_validacion_umbrales.py
 
 ## Redes disponibles
 
+PowerMind incluye 18 redes listas para usar: 15 redes IEEE estándar de PandaPower y 3 escenarios de la red eléctrica de Costa Rica.
+
+### Redes IEEE estándar
+
 | Red | Barras | Descripción |
 |---|---|---|
-| `IEEE_14` | 14 | Red académica estándar IEEE 14 barras |
-| `CR_Min` | 524 | Red eléctrica de Costa Rica, demanda mínima (marzo 2023) |
-| `CR_Med` | 524 | Red eléctrica de Costa Rica, demanda media (marzo 2023) |
-| `CR_Max` | 524 | Red eléctrica de Costa Rica, demanda máxima (marzo 2023) |
+| `IEEE_4` | 4 | Grainger & Stevenson. Red mínima de prueba |
+| `IEEE_5` | 5 | Red didáctica básica |
+| `IEEE_6` | 6 | Wood & Wollenberg. Red didáctica |
+| `IEEE_9` | 9 | WSCC. Red clásica de transmisión |
+| `IEEE_14` | 14 | Red estándar académica de referencia |
+| `IEEE_24_RTS` | 24 | IEEE Reliability Test System |
+| `IEEE_30` | 30 | Red mediana de transmisión |
+| `IEEE_33_BW` | 33 | Baran-Wu. Red de distribución radial |
+| `IEEE_39` | 39 | New England. Red de transmisión con 10 generadores |
+| `IEEE_57` | 57 | Red mediana-grande de transmisión |
+| `IEEE_89_PEGASE` | 89 | PEGASE. Red europea de transmisión |
+| `IEEE_118` | 118 | Benchmark clásico de transmisión |
+| `IEEE_145` | 145 | Red grande con múltiples niveles de tensión |
+| `IEEE_200` | 200 | Illinois. Red grande de transmisión |
+| `IEEE_300` | 300 | Red muy grande, prueba de escalabilidad |
+
+### Red eléctrica de Costa Rica
+
+| Red | Barras | Descripción |
+|---|---|---|
+| `CR_Min` | 524 | Demanda mínima (marzo 2023) |
+| `CR_Med` | 524 | Demanda media (marzo 2023) |
+| `CR_Max` | 524 | Demanda máxima (marzo 2023) |
 
 ### Particularidades de la red CR
 
@@ -103,9 +128,9 @@ python test_validacion_umbrales.py
 ## Estructura del proyecto
 
 ```
-GridMind/
+PowerMind/
 ├── agent.py                      # Loop ReAct + system prompt
-├── tools.py                      # 6 herramientas PandaPower + dispatcher
+├── tools.py                      # 7 herramientas PandaPower + dispatcher
 ├── definitions.py                # JSON Schema de herramientas (Anthropic/OpenAI)
 ├── main.py                       # CLI interactiva
 ├── red_cr_loader.py              # Adaptador para cargar red CR desde Excel
@@ -156,11 +181,10 @@ Costo promedio por consulta: ~$0.04 USD (Claude Sonnet 4.6).
 ## Limitaciones conocidas
 
 - **Alcance de simulación**: flujo de carga estacionario únicamente. No incluye estudios dinámicos, transitorios, cortocircuito ni flujo óptimo de potencia.
-- **Redes soportadas**: IEEE 14 y CR (Min/Med/Max). Para agregar redes nuevas, extender `AVAILABLE_NETWORKS` en `tools.py` y el catálogo en `definitions.py`.
 - **Tensiones CR fuera de rango**: la red CR opera con tensiones que violan el rango estándar. Esto es una propiedad del modelo y se documenta como limitación reconocida.
 - **Determinismo del LLM**: las respuestas del agente no son 100% determinísticas. La validación de umbrales (3 capas) y la validación cruzada periódica mitigan este riesgo.
 - **Archivo Max hardcoded**: `red_cr.py` tiene hardcoded el nombre `Base_CR_Max_2023-Marzo.xlsx`. El loader (`red_cr_loader.py`) maneja esto con backup permanente y restauración automática. No borrar `_Backup_Max_2023-Marzo.xlsx`.
 
 ## Autor
 
-Natalia Víctor Sandoval — B98438, Universidad de Costa Rica.
+Natalia Víctor Gallardo — B98438, Universidad de Costa Rica.
