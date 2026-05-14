@@ -1,12 +1,12 @@
-# PowerMind
+# GridMind
 
-Agente de inteligencia artificial para análisis de sistemas eléctricos de potencia. PowerMind integra un LLM (Claude, Anthropic) con PandaPower para responder consultas técnicas en lenguaje natural sobre redes eléctricas, delegando todos los cálculos numéricos al simulador.
+Agente de inteligencia artificial para análisis de sistemas eléctricos de potencia. GridMind integra un LLM (Claude, Anthropic) con PandaPower para responder consultas técnicas en lenguaje natural sobre redes eléctricas, delegando todos los cálculos numéricos al simulador.
 
 Desarrollado como Trabajo Final de Graduación (TFG) para la Licenciatura en Ingeniería Eléctrica, Universidad de Costa Rica.
 
 ## Arquitectura
 
-PowerMind usa el patrón **ReAct** (Reason + Act): el LLM razona sobre la consulta, decide qué herramienta de PandaPower usar, Python la ejecuta, y el resultado vuelve al LLM para que siga razonando o genere la respuesta final. El LLM nunca ejecuta código directamente ni inventa valores numéricos.
+GridMind usa el patrón **ReAct** (Reason + Act): el LLM razona sobre la consulta, decide qué herramienta de PandaPower usar, Python la ejecuta, y el resultado vuelve al LLM para que siga razonando o genere la respuesta final. El LLM nunca ejecuta código directamente ni inventa valores numéricos.
 
 ```
 Usuario → [consulta en lenguaje natural]
@@ -77,19 +77,19 @@ Comandos especiales: `/reset` (reiniciar red) | `/salir` (terminar).
 ### Batería de pruebas automatizada
 
 ```bash
-# Correr 9 consultas sobre los 3 escenarios CR (~$0.37 USD)
+# Correr 9 consultas sobre los 3 escenarios CR
 python correr_bateria_v2.py
 
-# Validar resultados contra PandaPower (sin costo)
+# Validar resultados contra PandaPower
 python validar_agente_v2.py
 
-# Tests de validación de umbrales (sin costo, sin API key)
+# Tests de validación de umbrales (sin API key)
 python test_validacion_umbrales.py
 ```
 
 ## Redes disponibles
 
-PowerMind incluye 18 redes listas para usar: 15 redes IEEE estándar de PandaPower y 3 escenarios de la red eléctrica de Costa Rica.
+GridMind incluye 18 redes listas para usar: 15 redes IEEE estándar de PandaPower y 3 escenarios de la red eléctrica de Costa Rica.
 
 ### Redes IEEE estándar
 
@@ -128,7 +128,7 @@ PowerMind incluye 18 redes listas para usar: 15 redes IEEE estándar de PandaPow
 ## Estructura del proyecto
 
 ```
-PowerMind/
+GridMind/
 ├── agent.py                      # Loop ReAct + system prompt
 ├── tools.py                      # 7 herramientas PandaPower + dispatcher
 ├── definitions.py                # JSON Schema de herramientas (Anthropic/OpenAI)
@@ -175,8 +175,6 @@ La validación cruzada compara las respuestas del agente contra cálculos direct
 | Data | ¿Los números coinciden con PandaPower? | 54/54 (100%) |
 | Response | ¿La respuesta final refleja los datos? | 24/24 (100%) |
 | **Total** | | **96/96 (100%)** |
-
-Costo promedio por consulta: ~$0.04 USD (Claude Sonnet 4.6).
 
 ## Limitaciones conocidas
 
