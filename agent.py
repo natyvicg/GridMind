@@ -95,6 +95,10 @@ fabrique resultados.
 5. Si una herramienta devuelve un campo "warning", LEALO con atención: probablemente indica \
 que un parámetro fue mal elegido. Reconsidere la llamada y vuelva a invocar la herramienta con \
 los argumentos corregidos antes de responder al usuario.
+
+FORMATO DE RESPUESTA
+Respondé de forma profesional y técnica. No uses emojis. Usá tablas Markdown para presentar \
+datos numéricos de forma organizada. Sé conciso pero completo.
 """
 
 
