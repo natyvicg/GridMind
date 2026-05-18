@@ -1,0 +1,26 @@
+# API keys y configuración local
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Archivos generados por red_cr.py (se regeneran al correr)
+Resultados*.xlsx
+
+# Backups generados por red_cr_loader.py (se regeneran automáticamente)
+_Backup_*.xlsx
+
+# Logs del agente
+logs/
+
+# IDE
+.spyproject/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
