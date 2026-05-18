@@ -59,33 +59,29 @@ pip install -r requirements.txt
 
 ## Uso
 
-### Chat interactivo
-
 ```bash
 python main.py
 ```
 
-Aparece un prompt donde podés escribir consultas en lenguaje natural. Ejemplos:
+Aparece un prompt interactivo donde podés escribir consultas en lenguaje natural. Ejemplos:
 
 - *"¿Qué redes tenés disponibles?"*
 - *"Carga la red IEEE_39 y dame un resumen del estado"*
 - *"¿Qué pasa si desconecto la línea 1-5 en IEEE_14?"*
 - *"Para la red CR_Min, ¿cuáles son las 5 peores violaciones de tensión?"*
 
-Comandos especiales: `/reset` (reiniciar red) | `/salir` (terminar).
+### Comandos especiales
 
-### Batería de pruebas automatizada
+| Comando | Función |
+|---|---|
+| `/ayuda` | Muestra la lista de comandos disponibles |
+| `/redes` | Muestra las 18 redes disponibles con descripción |
+| `/guardar` | Exporta la sesión completa a un archivo HTML con tema oscuro |
+| `/historial` | Muestra las consultas hechas en la sesión actual |
+| `/reset` | Descarga la red cargada (empezar de cero) |
+| `/salir` | Termina la sesión (también `/exit`, `/quit` o Ctrl+C) |
 
-```bash
-# Correr 9 consultas sobre los 3 escenarios CR
-python correr_bateria_v2.py
-
-# Validar resultados contra PandaPower
-python validar_agente_v2.py
-
-# Tests de validación de umbrales (sin API key)
-python test_validacion_umbrales.py
-```
+La sesión exportada con `/guardar` incluye metadata por consulta (herramientas usadas, iteraciones, tokens, costo, tiempo) y un resumen global de la sesión.
 
 ## Redes disponibles
 
@@ -125,45 +121,38 @@ GridMind incluye 18 redes listas para usar: 15 redes IEEE estándar de PandaPowe
 - Opera con tensiones fuera del rango estándar 0.95-1.05 pu por diseño operativo (Vmin típico ~0.75-0.81 pu, Vmax ~1.20-1.25 pu). Esto es una característica del modelo, no un error.
 - 11 de 524 barras no tienen resultado en `res_bus` por despacho operativo (3 unidades no despachadas + 8 devanados terciarios desactivados). Las herramientas filtran NaN automáticamente.
 
+## Escenarios de validación
+
+`escenarios.py` genera automáticamente 4 escenarios estándar (ORIGINAL, BASE, SUBTENSIÓN, SOBRECARGA) para cualquiera de las 15 redes IEEE, con ground truth calculado directamente desde PandaPower. Además incluye 7 escenarios curados (E1-E7) diseñados a mano para IEEE 14 y Costa Rica.
+
+De las 15 redes IEEE, 9 producen los 4 escenarios viables; IEEE 145 y 300 fallan por problemas estructurales de tensión en sus parámetros de fábrica (no son bugs de GridMind).
+
 ## Estructura del proyecto
 
 ```
 GridMind/
-├── agent.py                      # Loop ReAct + system prompt
-├── tools.py                      # 7 herramientas PandaPower + dispatcher
-├── definitions.py                # JSON Schema de herramientas (Anthropic/OpenAI)
-├── main.py                       # CLI interactiva
-├── red_cr_loader.py              # Adaptador para cargar red CR desde Excel
-├── red_cr.py                     # Constructor original de la red CR (no modificar)
-├── ground_truth.py               # Cálculos directos PandaPower para validación
-├── escenarios_ieee14.py          # 4 escenarios IEEE 14 (original/base/subtensión/sobrecarga)
-├── escenarios.py                 # Builders de escenarios para tabla maestra
-├── correr_bateria_v2.py          # Batería automatizada de 9 consultas sobre CR
-├── validar_agente.py             # Validación cruzada agente vs PandaPower
-├── validar_agente_v2.py          # Re-validación post-corrección de umbrales
-├── test_validacion_umbrales.py   # Tests de la validación de inputs (sin API)
-├── ejecutar_escenarios_ieee14.py # Genera unifilares y tabla resumen IEEE 14
-├── consolidar_escenarios.py      # Tabla maestra de 7 escenarios (histórico)
-├── validar_red_cr.py             # Validación inicial de la red CR
-├── diagnosticar_barras_cr.py     # Diagnóstico de las 11 barras sin resultado
-├── analizar_barras_aisladas.py   # Análisis detallado de barras aisladas
-├── red_cr_transmisión.py         # Modelo de transmisión CR (referencia)
-├── Procesar_datos.py             # Procesamiento de datos CR (referencia)
-├── requirements.txt              # Dependencias pip (freeze completo)
-├── environment.yml               # Entorno conda reproducible
-├── .env                          # API key (NO incluido en Git)
-├── .gitignore                    # Exclusiones de Git
-├── Base_CR_Min_2023-Marzo.xlsx   # Datos de demanda mínima CR
-├── Base_CR_Med_2023-Marzo.xlsx   # Datos de demanda media CR
-├── Base_CR_Max_2023-Marzo.xlsx   # Datos de demanda máxima CR
-├── _Backup_Max_2023-Marzo.xlsx   # Backup permanente del Max original
-├── logs/                         # Logs de corridas y validación
-│   ├── log_bateria_v1.json       # Primera corrida (con hallazgo de umbrales)
-│   ├── log_bateria_v2.json       # Segunda corrida (post-corrección)
-│   ├── log_bateria_v1.md         # Versión legible de la primera corrida
-│   └── log_validacion_v2.json    # Validación cruzada: 96/96 chequeos (100%)
-└── docs/                         # Documentación del TFG (bitácoras, propuesta)
+├── agent.py                    # Loop ReAct + system prompt
+├── tools.py                    # 7 herramientas PandaPower + dispatcher
+├── definitions.py              # JSON Schema de herramientas (Anthropic/OpenAI)
+├── main.py                     # CLI interactiva con comandos especiales
+├── escenarios.py               # Escenarios genéricos (15 IEEE) + curados (E1-E7)
+├── red_cr.py                   # Constructor original de la red CR (no modificar)
+├── red_cr_loader.py            # Adaptador para cargar red CR desde Excel
+├── red_cr_transmisión.py       # Modelo de transmisión CR (referencia)
+├── Base_CR_Min_2023-Marzo.xlsx # Datos de demanda mínima CR
+├── Base_CR_Med_2023-Marzo.xlsx # Datos de demanda media CR
+├── Base_CR_Max_2023-Marzo.xlsx # Datos de demanda máxima CR
+├── environment.yml             # Entorno conda reproducible
+├── requirements.txt            # Dependencias pip
+├── .gitignore                  # Exclusiones de Git
+└── logs/                       # Sesiones exportadas con /guardar
 ```
+
+Archivos generados automáticamente (excluidos de Git via `.gitignore`):
+
+- `_Backup_*_2023-Marzo.xlsx` — Copias permanentes de los Excel CR, creadas por `red_cr_loader.py` en la primera ejecución. No borrar manualmente.
+- `Resultados*.xlsx` — Salida de `red_cr.py` al construir la red.
+- `.env` — API key de Anthropic (crear manualmente).
 
 ## Resultados de validación
 
@@ -175,6 +164,10 @@ La validación cruzada compara las respuestas del agente contra cálculos direct
 | Data | ¿Los números coinciden con PandaPower? | 54/54 (100%) |
 | Response | ¿La respuesta final refleja los datos? | 24/24 (100%) |
 | **Total** | | **96/96 (100%)** |
+
+### Hallazgo: threshold drift
+
+Durante la validación se documentó un modo de falla donde el LLM confunde valores observados (Vmax de la red) con umbrales operacionales (1.05 pu), reportando 0 violaciones cuando sí las hay. Se mitigó con tres capas: validación runtime en `tools.py`, descripciones explícitas en `definitions.py`, y convención de umbrales en el system prompt de `agent.py`.
 
 ## Limitaciones conocidas
 
