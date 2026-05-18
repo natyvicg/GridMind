@@ -3,6 +3,7 @@
 
 # Python
 __pycache__/
+auxiliares/
 *.pyc
 *.pyo
 
@@ -11,9 +12,6 @@ Resultados*.xlsx
 
 # Backups generados por red_cr_loader.py (se regeneran automáticamente)
 _Backup_*.xlsx
-
-# Logs del agente
-logs/
 
 # IDE
 .spyproject/

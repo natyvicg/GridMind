@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>GridMind — 2026-05-17 20:58</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        header {
+            border-bottom: 2px solid #7ec8e3;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #7ec8e3;
+        }
+        header p {
+            color: #888;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .resumen {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .stat {
+            background: #2a2a4a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px 14px;
+        }
+        .stat .label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat .valor {
+            font-size: 18px;
+            font-weight: 600;
+            color: #7ec8e3;
+        }
+        .consulta {
+            background: #16213e;
+            border: 1px solid #333;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .q-header {
+            background: #2a2a4a;
+            color: #fff;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .q-header .hora {
+            float: right;
+            font-weight: 400;
+            opacity: 0.7;
+        }
+        .usuario {
+            padding: 12px 16px;
+            background: #1a1a3a;
+            border-bottom: 1px solid #333;
+            font-style: italic;
+            color: #bbb;
+        }
+        .meta {
+            padding: 6px 16px;
+            font-size: 11px;
+            color: #999;
+            background: #1a1a30;
+            border-bottom: 1px solid #222;
+        }
+        .respuesta {
+            padding: 16px;
+        }
+        .respuesta h2 {
+            font-size: 16px;
+            color: #7ec8e3;
+            margin: 16px 0 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #333;
+        }
+        .respuesta h3 {
+            font-size: 15px;
+            color: #5b9bd5;
+            margin: 14px 0 6px;
+        }
+        .respuesta h4 {
+            font-size: 14px;
+            color: #5b9bd5;
+            margin: 12px 0 6px;
+        }
+        .respuesta p {
+            margin: 6px 0;
+        }
+        .respuesta .item {
+            padding-left: 16px;
+            position: relative;
+        }
+        .respuesta .item::before {
+            content: "—";
+            position: absolute;
+            left: 0;
+            color: #666;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        th {
+            background: #2a2a4a;
+            color: #7ec8e3;
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        td {
+            padding: 7px 12px;
+            border-bottom: 1px solid #333;
+        }
+        tr:hover td {
+            background: #1e1e3a;
+        }
+        .nota {
+            background: #2e1a2e;
+            border-left: 3px solid #ff55ff;
+            padding: 8px 12px;
+            margin: 10px 0;
+            font-size: 13px;
+            color: #ff99ff;
+        }
+        strong {
+            font-weight: 600;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>GridMind</h1>
+        <p>Sesion del 17/05/2026 a las 20:58 · Duracion: 5min 4s</p>
+    </header>
+
+    <div class="resumen">
+        <div class="stat"><div class="label">Consultas</div><div class="valor">1</div></div>
+        <div class="stat"><div class="label">Tokens</div><div class="valor">7,392</div></div>
+        <div class="stat"><div class="label">Tiempo</div><div class="valor">5:04</div></div>
+        <div class="stat"><div class="label">Costo</div><div class="valor">$0.0280</div></div>
+    </div>
+
+    
+            <section class="consulta">
+                <div class="q-header">Consulta 1<span class="hora">21:03:22</span></div>
+                <div class="usuario">Carga la red IEEE_30 y dame un resumen</div>
+                <p class="meta">run_power_flow · 2 iter · 11.2s · $0.0280</p>
+                <div class="respuesta">
+                    <p>Aquí está el resumen del flujo de potencia para la red <strong>IEEE_30</strong>:</p>
+<h3>Red IEEE_30 — Resumen del Flujo de Potencia (Newton-Raphson)</h3>
+<table>
+<tr><th>Parámetro</th><th>Valor</th></tr>
+<tr><td><strong>Convergencia</strong></td><td>✓ Exitosa</td></tr>
+<tr><td><strong>Número de barras</strong></td><td>30</td></tr>
+<tr><td><strong>Barras con resultado</strong></td><td>30 / 30</td></tr>
+<tr><td><strong>Número de líneas</strong></td><td>41</td></tr>
+<tr><td><strong>Número de transformadores</strong></td><td>0</td></tr>
+<tr><td><strong>Tensión mínima</strong></td><td>0.9606 pu</td></tr>
+<tr><td><strong>Tensión máxima</strong></td><td>1.0000 pu</td></tr>
+<tr><td><strong>Carga máxima de línea</strong></td><td>111.83 %</td></tr>
+</table>
+<h4>Observaciones técnicas</h4>
+<p>1. <strong>Convergencia:</strong> El flujo de potencia convergió sin inconvenientes con el método Newton-Raphson.</p>
+<p>2. <strong>Perfil de tensiones:</strong> El rango de tensiones se encuentra entre <strong>0.9606 pu</strong> y <strong>1.0000 pu</strong>. El valor mínimo está por encima del umbral operacional inferior (0.95 pu), aunque cercano al límite. No se anticipan violaciones severas, aunque puede haber barras marginales.</p>
+<p>3. <strong>Sobrecarga de líneas:</strong> La carga máxima registrada es de <strong>111.83 %</strong>, lo que indica que al menos una línea supera su límite térmico. Se recomienda revisar las sobrecargas con detalle.</p>
+<p>¿Desea que analice las <strong>violaciones de tensión</strong>, las <strong>líneas sobrecargadas</strong>, o ambas?</p>
+                </div>
+            </section>
+            
+</body>
+</html>
