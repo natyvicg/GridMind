@@ -56,34 +56,63 @@ PRECIO_OUTPUT = 15.00
 
 LOGS_DIR = Path("logs")
 
-def _box_line(text, width=54):
-    """Centra una línea dentro del marco."""
-    pad_total = width - len(text)
-    pad_left = pad_total // 2
-    pad_right = pad_total - pad_left
-    return f"║  {' ' * pad_left}{text}{' ' * pad_right}║"
+_W = 58
+_SEP = "  " + "─" * _W
 
-_W = 54
+def _center(text, width=_W + 2):
+    """Centra texto en el ancho dado."""
+    return text.center(width)
+
+
 BANNER = (
-    "\n╔" + "═" * (_W + 2) + "╗\n"
-    + _box_line("GridMind v{} - Agente Electrico".format(VERSION), _W) + "\n"
-    + _box_line("Claude + PandaPower para analisis de red", _W) + "\n"
-    + "╠" + "═" * (_W + 2) + "╣\n"
-    + _box_line("Escribi tu consulta en lenguaje natural.", _W) + "\n"
-    + _box_line("El agente razona y usa PandaPower para responder.", _W) + "\n"
-    + "╚" + "═" * (_W + 2) + "╝\n"
-    + "Comandos: /ayuda | /redes | /guardar | /reset | /salir\n"
+    "\n  ╔" + "═" * _W + "╗\n"
+    + "  ║" + _center("GridMind v{}".format(VERSION), _W) + "║\n"
+    + "  ║" + _center("Agente de IA para análisis de redes eléctricas", _W) + "║\n"
+    + "  ╚" + "═" * _W + "╝\n"
+    + "\n"
+    + "  GridMind recibe consultas en lenguaje natural, razona\n"
+    + "  sobre el problema y ejecuta simulaciones en PandaPower\n"
+    + "  para entregar resultados numéricos reales.\n"
+    + "\n"
+    + _SEP + "\n"
+    + "  Ejemplos de consultas:\n"
+    + "\n"
+    + "    > Carga la red IEEE_14 y dame un resumen del estado\n"
+    + "    > ¿Cuáles barras tienen violaciones de tensión en CR_Max?\n"
+    + "    > Desconecta la línea 1-5 y analiza el impacto\n"
+    + "\n"
+    + _SEP + "\n"
+    + "  Comandos:\n"
+    + "\n"
+    + "    /redes       Ver las 18 redes disponibles\n"
+    + "    /guardar     Exportar la sesión a HTML\n"
+    + "    /historial   Consultas realizadas en esta sesión\n"
+    + "    /reset       Descargar la red actual\n"
+    + "    /ayuda       Más información sobre GridMind\n"
+    + "    /salir       Terminar sesión\n"
 )
 
 AYUDA = """
   Comandos disponibles:
+  ──────────────────────────────────────────────────────────
 
+    /redes      Muestra las 18 redes disponibles (IEEE + Costa Rica)
+    /guardar    Exporta la sesión completa a un archivo HTML
+    /historial  Muestra las consultas hechas en esta sesión
+    /reset      Descarga la red actual y empieza de cero
+    /salir      Termina la sesión (también /exit, /quit o Ctrl+C)
     /ayuda      Muestra esta ayuda
-    /redes      Muestra las redes disponibles (sin costo)
-    /guardar    Exporta toda la sesion a un archivo Markdown
-    /historial  Muestra las consultas hechas en esta sesion
-    /reset      Descarga la red actual (empezar de cero)
-    /salir      Termina la sesion (tambien /exit, /quit o Ctrl+C)
+
+  Sobre GridMind:
+  ──────────────────────────────────────────────────────────
+
+    Usa el patrón ReAct (razonamiento + acción): el agente
+    decide qué herramienta de PandaPower necesita, Python la
+    ejecuta, y el resultado vuelve al agente para seguir
+    razonando o responder.
+
+    Redes: 15 IEEE estándar (4 a 300 barras) + 3 escenarios
+    de la red eléctrica de Costa Rica (524 barras, marzo 2023).
 """
 
 
