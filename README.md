@@ -146,7 +146,6 @@ GridMind/
 │
 ├── docs/                       # Documentación del TFG
 │   ├── Propuesta_TFG_Natalia_Victor_B98438.pdf
-│   └── bitacora_mitigacion_umbrales.md
 │
 ├── tests/                      # Validación y pruebas
 │   ├── ground_truth.py             # Cálculos directos PandaPower para validación
@@ -166,9 +165,7 @@ GridMind/
 │   └── procesar_datos.py           # Procesamiento de datos CR
 │
 └── logs/                       # Sesiones y logs de validación
-    ├── log_bateria_v1.json         # Primera corrida (con hallazgo de umbrales)
-    ├── log_bateria_v2.json         # Segunda corrida (post-corrección)
-    └── log_validacion_v2.json      # Validación cruzada: 96/96 (100%)
+
 ```
 
 Archivos generados automáticamente (excluidos de Git via `.gitignore`):
