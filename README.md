@@ -59,9 +59,22 @@ pip install -r requirements.txt
 
 ## Uso
 
+> **Importante:** Siempre activar el entorno antes de ejecutar. Sin `conda activate gridmind`, el sistema puede usar un Python incorrecto (ej. el de ETAP) y fallar silenciosamente.
+
 ```bash
+conda activate gridmind
 python main.py
 ```
+
+### Verificación rápida del entorno
+
+```bash
+python --version          # Debe ser >= 3.10
+pip show pandapower       # Debe estar instalado
+python -m tests.test_validacion_umbrales   # Prueba local sin API key
+```
+
+La prueba `test_validacion_umbrales` valida la lógica de inputs y umbrales de `tools.py` usando únicamente PandaPower (no requiere API key ni conexión a internet).
 
 Aparece un prompt interactivo donde podés escribir consultas en lenguaje natural. Ejemplos:
 
@@ -139,7 +152,7 @@ GridMind/
 ├── red_cr.py                   # Constructor original de la red CR (no modificar)
 ├── red_cr_loader.py            # Adaptador para cargar red CR desde Excel
 ├── red_cr_transmisión.py       # Modelo de transmisión CR (referencia)
-├── Base_CR_*_2023Marzo.xlsx    # Datos de demanda CR (Min, Med, Max)
+├── Base_CR_*_2023-Marzo.xlsx    # Datos de demanda CR (Min, Med, Max)
 ├── environment.yml             # Entorno conda reproducible
 ├── requirements.txt            # Dependencias pip
 ├── .gitignore
@@ -159,8 +172,8 @@ GridMind/
 │   ├── validar_red_cr.py           # Validación inicial de la red CR
 │   ├── diagnosticar_barras_cr.py   # Diagnóstico de las 11 barras sin resultado
 │   ├── analizar_barras_aisladas.py # Análisis detallado de barras aisladas
-│   ├── consolidar_escenarios.py    # Tabla maestra de 7 escenarios (histórico)
-│   ├── ejecutar_escenarios_ieee14.py # Genera unifilares y tabla resumen IEEE 14
+│   ├── consolidar_escenarios.py    # (histórico — depende de metricas.py, ya obsoleto)
+│   ├── ejecutar_escenarios_ieee14.py # (histórico — actualizar import a escenarios.py)
 │   ├── probar_escenarios_genericos.py # Prueba de escenarios genéricos
 │   └── procesar_datos.py           # Procesamiento de datos CR
 │
@@ -173,6 +186,8 @@ Archivos generados automáticamente (excluidos de Git via `.gitignore`):
 - `_Backup_*_2023-Marzo.xlsx` — Copias permanentes de los Excel CR, creadas por `red_cr_loader.py` en la primera ejecución. No borrar manualmente.
 - `Resultados*.xlsx` — Salida de `red_cr.py` al construir la red.
 - `.env` — API key de Anthropic (crear manualmente).
+
+> **Nota sobre scripts históricos:** Los scripts en `scripts/` fueron herramientas de desarrollo usadas durante la construcción del proyecto. Algunos (`consolidar_escenarios.py`, `ejecutar_escenarios_ieee14.py`) dependen de módulos que ya no existen porque su funcionalidad fue absorbida por `escenarios.py`. No deben ejecutarse sin revisión previa.
 
 ## Resultados de validación
 

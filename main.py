@@ -11,7 +11,7 @@ USO:
 COMANDOS ESPECIALES:
     /ayuda      Lista de comandos disponibles
     /redes      Muestra las redes disponibles
-    /guardar    Exporta la sesión completa a un archivo Markdown
+    /guardar    Exporta la sesión completa a un archivo HTML
     /historial  Muestra las consultas hechas en esta sesión
     /reset      Limpia la red cargada (empezás de cero)
     /salir      Termina la sesión
