@@ -3,7 +3,6 @@
 
 # Python
 __pycache__/
-auxiliares/
 *.pyc
 *.pyo
 
@@ -12,6 +11,10 @@ Resultados*.xlsx
 
 # Backups generados por red_cr_loader.py (se regeneran automáticamente)
 _Backup_*.xlsx
+
+# Salidas de scripts de validación/escenarios (se regeneran)
+resumen_validacion_cr.xlsx
+viabilidad_escenarios_ieee.xlsx
 
 # IDE
 .spyproject/

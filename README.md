@@ -139,13 +139,36 @@ GridMind/
 ├── red_cr.py                   # Constructor original de la red CR (no modificar)
 ├── red_cr_loader.py            # Adaptador para cargar red CR desde Excel
 ├── red_cr_transmisión.py       # Modelo de transmisión CR (referencia)
-├── Base_CR_Min_2023-Marzo.xlsx # Datos de demanda mínima CR
-├── Base_CR_Med_2023-Marzo.xlsx # Datos de demanda media CR
-├── Base_CR_Max_2023-Marzo.xlsx # Datos de demanda máxima CR
+├── Base_CR_*_2023Marzo.xlsx    # Datos de demanda CR (Min, Med, Max)
 ├── environment.yml             # Entorno conda reproducible
 ├── requirements.txt            # Dependencias pip
-├── .gitignore                  # Exclusiones de Git
-└── logs/                       # Sesiones exportadas con /guardar
+├── .gitignore
+│
+├── docs/                       # Documentación del TFG
+│   ├── Propuesta_TFG_Natalia_Victor_B98438.pdf
+│   └── bitacora_mitigacion_umbrales.md
+│
+├── tests/                      # Validación y pruebas
+│   ├── ground_truth.py             # Cálculos directos PandaPower para validación
+│   ├── test_validacion_umbrales.py # Tests de validación de inputs (sin API)
+│   ├── correr_bateria.py           # Batería automatizada v1 (9 consultas CR)
+│   ├── correr_bateria_v2.py        # Batería automatizada v2 (post-corrección)
+│   ├── validar_agente.py           # Validación cruzada agente vs PandaPower
+│   └── validar_agente_v2.py        # Re-validación post-corrección de umbrales
+│
+├── scripts/                    # Diagnóstico y análisis (no son core)
+│   ├── validar_red_cr.py           # Validación inicial de la red CR
+│   ├── diagnosticar_barras_cr.py   # Diagnóstico de las 11 barras sin resultado
+│   ├── analizar_barras_aisladas.py # Análisis detallado de barras aisladas
+│   ├── consolidar_escenarios.py    # Tabla maestra de 7 escenarios (histórico)
+│   ├── ejecutar_escenarios_ieee14.py # Genera unifilares y tabla resumen IEEE 14
+│   ├── probar_escenarios_genericos.py # Prueba de escenarios genéricos
+│   └── procesar_datos.py           # Procesamiento de datos CR
+│
+└── logs/                       # Sesiones y logs de validación
+    ├── log_bateria_v1.json         # Primera corrida (con hallazgo de umbrales)
+    ├── log_bateria_v2.json         # Segunda corrida (post-corrección)
+    └── log_validacion_v2.json      # Validación cruzada: 96/96 (100%)
 ```
 
 Archivos generados automáticamente (excluidos de Git via `.gitignore`):
