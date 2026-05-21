@@ -31,7 +31,7 @@ import math
 import pandapower as pp
 import pandapower.networks as pn
 
-from red_cr_loader import cargar_red_cr
+from red_cr_loader import cargar_red_cr, limpiar_cache as _limpiar_cache_cr
 
 
 # ---------------------------------------------------------------------------
@@ -499,11 +499,13 @@ def list_available_networks():
 def reset_network():
     """
     Limpia el estado interno: descarga la red actual y fuerza recarga
-    en la próxima llamada a run_power_flow. Útil para el comando /reset
-    de la CLI interactiva.
+    en la próxima llamada a run_power_flow. También vacía el cache
+    de redes CR para que no queden redes mutadas en memoria.
+    Útil para el comando /reset de la CLI interactiva.
     """
     _STATE["net"] = None
     _STATE["current_network_name"] = None
+    _limpiar_cache_cr()
     return {"status": "reset", "note": "Red descargada. Llame run_power_flow para cargar una nueva."}
 
 
