@@ -59,7 +59,7 @@ pip install -r requirements.txt
 
 ## Uso
 
-> **Importante:** Siempre activar el entorno antes de ejecutar. Sin `conda activate gridmind`, el sistema puede usar un Python incorrecto (ej. el de ETAP) y fallar silenciosamente.
+> **Importante:** Siempre activar el entorno antes de ejecutar.
 
 ```bash
 conda activate gridmind
