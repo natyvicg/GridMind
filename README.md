@@ -146,7 +146,7 @@ De las 15 redes IEEE, 9 producen los 4 escenarios viables; IEEE 145 y 300 fallan
 GridMind/
 ├── agent.py                    # Loop ReAct + system prompt
 ├── tools.py                    # 7 herramientas PandaPower + dispatcher
-├── definitions.py              # JSON Schema de herramientas (Anthropic/OpenAI)
+├── definitions.py              # JSON Schema de herramientas (Anthropic)
 ├── main.py                     # CLI interactiva con comandos especiales
 ├── escenarios.py               # Escenarios genéricos (15 IEEE) + curados (E1-E7)
 ├── red_cr.py                   # Constructor original de la red CR (no modificar)

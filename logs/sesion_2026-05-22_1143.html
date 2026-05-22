@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>GridMind — 2026-05-22 11:43</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        header {
+            border-bottom: 2px solid #7ec8e3;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #7ec8e3;
+        }
+        header p {
+            color: #888;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .resumen {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .stat {
+            background: #2a2a4a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px 14px;
+        }
+        .stat .label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat .valor {
+            font-size: 18px;
+            font-weight: 600;
+            color: #7ec8e3;
+        }
+        .consulta {
+            background: #16213e;
+            border: 1px solid #333;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .q-header {
+            background: #2a2a4a;
+            color: #fff;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .q-header .hora {
+            float: right;
+            font-weight: 400;
+            opacity: 0.7;
+        }
+        .usuario {
+            padding: 12px 16px;
+            background: #1a1a3a;
+            border-bottom: 1px solid #333;
+            font-style: italic;
+            color: #bbb;
+        }
+        .meta {
+            padding: 6px 16px;
+            font-size: 11px;
+            color: #999;
+            background: #1a1a30;
+            border-bottom: 1px solid #222;
+        }
+        .respuesta {
+            padding: 16px;
+        }
+        .respuesta h2 {
+            font-size: 16px;
+            color: #7ec8e3;
+            margin: 16px 0 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #333;
+        }
+        .respuesta h3 {
+            font-size: 15px;
+            color: #5b9bd5;
+            margin: 14px 0 6px;
+        }
+        .respuesta h4 {
+            font-size: 14px;
+            color: #5b9bd5;
+            margin: 12px 0 6px;
+        }
+        .respuesta p {
+            margin: 6px 0;
+        }
+        .respuesta .item {
+            padding-left: 16px;
+            position: relative;
+        }
+        .respuesta .item::before {
+            content: "—";
+            position: absolute;
+            left: 0;
+            color: #666;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        th {
+            background: #2a2a4a;
+            color: #7ec8e3;
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        td {
+            padding: 7px 12px;
+            border-bottom: 1px solid #333;
+        }
+        tr:hover td {
+            background: #1e1e3a;
+        }
+        .nota {
+            background: #2e1a2e;
+            border-left: 3px solid #ff55ff;
+            padding: 8px 12px;
+            margin: 10px 0;
+            font-size: 13px;
+            color: #ff99ff;
+        }
+        strong {
+            font-weight: 600;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>GridMind</h1>
+        <p>Sesion del 22/05/2026 a las 11:43 · Duracion: 9min 56s</p>
+    </header>
+
+    <div class="resumen">
+        <div class="stat"><div class="label">Consultas</div><div class="valor">7</div></div>
+        <div class="stat"><div class="label">Tokens</div><div class="valor">77,577</div></div>
+        <div class="stat"><div class="label">Tiempo</div><div class="valor">9:56</div></div>
+        <div class="stat"><div class="label">Costo</div><div class="valor">$0.2983</div></div>
+    </div>
+
+    
+            <section class="consulta">
+                <div class="q-header">Consulta 1<span class="hora">11:50:01</span></div>
+                <div class="usuario">Carga la red IEEE_14 y dame un resumen del estado</div>
+                <p class="meta">run_power_flow, get_voltage_violations, get_overloaded_lines · 3 iter · 16.9s · $0.0448</p>
+                <div class="respuesta">
+                    <p>Aquí tiene el resumen completo del estado de la red <strong>IEEE_14</strong> tras el flujo de potencia Newton-Raphson:</p>
+<h3>Resumen General</h3>
+<table>
+<tr><th>Parámetro</th><th>Valor</th></tr>
+<tr><td>Convergencia</td><td>Sí</td></tr>
+<tr><td>Número de barras</td><td>14</td></tr>
+<tr><td>Número de líneas</td><td>15</td></tr>
+<tr><td>Número de transformadores</td><td>5</td></tr>
+<tr><td>Tensión mínima observada</td><td>1.0100 pu</td></tr>
+<tr><td>Tensión máxima observada</td><td>1.0900 pu</td></tr>
+<tr><td>Carga máxima de líneas</td><td>1.51 %</td></tr>
+<tr><td>Carga máxima de transformadores</td><td>0.45 %</td></tr>
+</table>
+<h3>Violaciones de Tensión (umbral: 0.95 – 1.05 pu)</h3>
+<p>Se detectaron <strong>9 violaciones por sobretensión</strong>. No hay subtensiones.</p>
+<table>
+<tr><th>Barra (IEEE)</th><th>Tensión (pu)</th><th>Tipo</th></tr>
+<tr><td>8</td><td>1.0900</td><td>Sobretensión</td></tr>
+<tr><td>6</td><td>1.0700</td><td>Sobretensión</td></tr>
+<tr><td>7</td><td>1.0615</td><td>Sobretensión</td></tr>
+<tr><td>1</td><td>1.0600</td><td>Sobretensión</td></tr>
+<tr><td>11</td><td>1.0569</td><td>Sobretensión</td></tr>
+<tr><td>9</td><td>1.0559</td><td>Sobretensión</td></tr>
+<tr><td>12</td><td>1.0552</td><td>Sobretensión</td></tr>
+<tr><td>10</td><td>1.0510</td><td>Sobretensión</td></tr>
+<tr><td>13</td><td>1.0504</td><td>Sobretensión</td></tr>
+</table>
+<div class="nota">Nota: los índices internos PandaPower son 0-indexed; la tabla usa numeración IEEE (índice + 1).</div>
+<h3>Sobrecargas en Líneas</h3>
+<p><strong>No se detectaron líneas sobrecargadas.</strong> La carga máxima es de apenas 1.51 %, lo que indica una red operando muy por debajo de su capacidad térmica.</p>
+<h3>Conclusiones</h3>
+<p class="item">La red <strong>converge</strong> correctamente.</p>
+<p class="item">El perfil de tensión presenta <strong>sobretensiones generalizadas</strong>: 9 de 14 barras superan el límite superior de 1.05 pu, con la barra 8 como la más severa (1.09 pu). Esto es típico del modelo IEEE 14 en condición de referencia, donde los generadores operan con consignas de tensión elevadas.</p>
+<p class="item">No hay ningún problema de capacidad térmica en líneas ni transformadores.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 2<span class="hora">11:50:18</span></div>
+                <div class="usuario">¿Hay violaciones de tensión?</div>
+                <p class="meta">list_available_networks · 2 iter · 11.9s · $0.0316</p>
+                <div class="respuesta">
+                    <p>Hay 18 redes disponibles. ¿En cuál de ellas desea verificar las violaciones de tensión?</p>
+<table>
+<tr><th>#</th><th>Red</th><th>Descripción</th></tr>
+<tr><td>1</td><td>IEEE_4</td><td>Red mínima de prueba (4 barras)</td></tr>
+<tr><td>2</td><td>IEEE_5</td><td>Red didáctica básica (5 barras)</td></tr>
+<tr><td>3</td><td>IEEE_6</td><td>Red didáctica (6 barras)</td></tr>
+<tr><td>4</td><td>IEEE_9</td><td>Red clásica de transmisión (9 barras)</td></tr>
+<tr><td>5</td><td>IEEE_14</td><td>Red estándar académica (14 barras)</td></tr>
+<tr><td>6</td><td>IEEE_24_RTS</td><td>Sistema de prueba de confiabilidad (24 barras)</td></tr>
+<tr><td>7</td><td>IEEE_30</td><td>Red mediana de transmisión (30 barras)</td></tr>
+<tr><td>8</td><td>IEEE_33_BW</td><td>Red de distribución radial Baran-Wu (33 barras)</td></tr>
+<tr><td>9</td><td>IEEE_39</td><td>Red New England con 10 generadores (39 barras)</td></tr>
+<tr><td>10</td><td>IEEE_57</td><td>Red mediana-grande de transmisión (57 barras)</td></tr>
+<tr><td>11</td><td>IEEE_89_PEGASE</td><td>Red europea PEGASE (89 barras)</td></tr>
+<tr><td>12</td><td>IEEE_118</td><td>Benchmark clásico (118 barras)</td></tr>
+<tr><td>13</td><td>IEEE_145</td><td>Red grande multinivel (145 barras)</td></tr>
+<tr><td>14</td><td>IEEE_200</td><td>Red grande de transmisión (200 barras)</td></tr>
+<tr><td>15</td><td>IEEE_300</td><td>Red muy grande, prueba de escalabilidad (300 barras)</td></tr>
+<tr><td>16</td><td>CR_Min</td><td>Red de Costa Rica, demanda mínima (524 barras)</td></tr>
+<tr><td>17</td><td>CR_Med</td><td>Red de Costa Rica, demanda media (524 barras)</td></tr>
+<tr><td>18</td><td>CR_Max</td><td>Red de Costa Rica, demanda máxima (524 barras)</td></tr>
+</table>
+<p>Por favor indique el nombre de la red que desea analizar y procederé de inmediato.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 3<span class="hora">11:51:07</span></div>
+                <div class="usuario">IEEE_14</div>
+                <p class="meta">run_power_flow, get_voltage_violations, get_overloaded_lines · 3 iter · 18.0s · $0.0460</p>
+                <div class="respuesta">
+                    <p>A continuación se presenta el resumen completo del análisis de la red <strong>IEEE 14 barras</strong>.</p>
+<h3>Resumen del Flujo de Potencia — IEEE\_14</h3>
+<table>
+<tr><th>Parámetro</th><th>Valor</th></tr>
+<tr><td>Convergencia</td><td><strong>Si</strong> (Newton-Raphson)</td></tr>
+<tr><td>Numero de barras</td><td>14</td></tr>
+<tr><td>Numero de lineas</td><td>15</td></tr>
+<tr><td>Numero de transformadores</td><td>5</td></tr>
+<tr><td>Tension minima observada</td><td>1.0100 pu</td></tr>
+<tr><td>Tension maxima observada</td><td>1.0900 pu</td></tr>
+<tr><td>Carga maxima de linea</td><td>1.51 %</td></tr>
+<tr><td>Carga maxima de transformador</td><td>0.45 %</td></tr>
+</table>
+<h3>Violaciones de Tension [0.95 – 1.05 pu]</h3>
+<p>Se detectaron <strong>9 violaciones por sobretension</strong> y <strong>0 por subtension</strong>.</p>
+<table>
+<tr><th>Barra (IEEE)</th><th>Tension (pu)</th><th>Tipo</th></tr>
+<tr><td>8</td><td>1.0900</td><td>Sobretension</td></tr>
+<tr><td>6</td><td>1.0700</td><td>Sobretension</td></tr>
+<tr><td>7</td><td>1.0615</td><td>Sobretension</td></tr>
+<tr><td>1</td><td>1.0600</td><td>Sobretension</td></tr>
+<tr><td>11</td><td>1.0569</td><td>Sobretension</td></tr>
+<tr><td>9</td><td>1.0559</td><td>Sobretension</td></tr>
+<tr><td>12</td><td>1.0552</td><td>Sobretension</td></tr>
+<tr><td>10</td><td>1.0510</td><td>Sobretension</td></tr>
+<tr><td>13</td><td>1.0504</td><td>Sobretension</td></tr>
+</table>
+<div class="nota"><strong>Nota:</strong> Los índices internos de PandaPower son 0-indexed; se presentan aqui en convencion IEEE 1-indexed (se suma 1 al indice interno).</div>
+<h3>Sobrecargas en Lineas</h3>
+<p><strong>No se detectaron lineas sobrecargadas.</strong> La carga maxima registrada es de apenas 1.51 %, lo que indica una red con amplia capacidad de transmision disponible.</p>
+<h3>Diagnostico General</h3>
+<p class="item">La red <strong>converge</strong> correctamente.</p>
+<p class="item">El principal problema operativo son las <strong>sobretensiones generalizadas</strong>: 9 de las 14 barras superan el limite superior de 1.05 pu, con la barra 8 como la mas critica (1.0900 pu).</p>
+<p class="item">No hay congestiones en lineas ni transformadores.</p>
+<p class="item">Las sobretensiones sugieren un <strong>exceso de generacion reactiva</strong> o una compensacion capacitiva elevada. Se recomienda revisar los setpoints de tension de los generadores y/o reducir la inyeccion de reactivos en las barras de control.</p>
+<p>¿Desea explorar algun escenario de contingencia, modificar cargas o ajustar algun parametro de la red?</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 4<span class="hora">11:51:50</span></div>
+                <div class="usuario">Desconecta la línea 1-5 de IEEE_14 y analiza el impacto</div>
+                <p class="meta">run_power_flow, get_voltage_violations, get_overloaded_lines, disconnect_line, run_power_flow, get_voltage_violations, get_overloaded_lines · 6 iter · 32.5s · $0.1025</p>
+                <div class="respuesta">
+                    <p>Tengo todos los datos necesarios. A continuación el análisis completo.</p>
+<h3>Análisis de Impacto — Desconexión de Línea L1-5 en IEEE_14</h3>
+<h4>1. Resumen Global del Sistema</h4>
+<table>
+<tr><th>Indicador</th><th>Estado Base</th><th>Post-Desconexión</th><th>Variación</th></tr>
+<tr><td>Convergencia</td><td>Si</td><td>Si</td><td>—</td></tr>
+<tr><td>Barras con resultado</td><td>14</td><td>14</td><td>Sin cambio</td></tr>
+<tr><td>V_min (pu)</td><td>1.0100</td><td>1.0071</td><td>−0.0029 pu</td></tr>
+<tr><td>V_max (pu)</td><td>1.0900</td><td>1.0900</td><td>Sin cambio</td></tr>
+<tr><td>Carga máx. de línea (%)</td><td>1.51 %</td><td>1.37 %</td><td>−0.14 pp</td></tr>
+<tr><td>Carga máx. de trafo (%)</td><td>0.45 %</td><td>0.48 %</td><td>+0.03 pp</td></tr>
+<tr><td>Violaciones de tensión</td><td>9</td><td>7</td><td>−2</td></tr>
+<tr><td>Líneas sobrecargadas</td><td>0</td><td>0</td><td>Sin cambio</td></tr>
+</table>
+<h4>2. Violaciones de Tensión por Sobretensión (> 1.05 pu)</h4>
+<p>#### Estado Base (9 violaciones)</p>
+<table>
+<tr><th>Barra</th><th>V (pu)</th><th>Tipo</th></tr>
+<tr><td>8 (B7)</td><td>1.0900</td><td>Sobretensión</td></tr>
+<tr><td>6 (B5)</td><td>1.0700</td><td>Sobretensión</td></tr>
+<tr><td>7 (B6)</td><td>1.0615</td><td>Sobretensión</td></tr>
+<tr><td>1 (B1)</td><td>1.0600</td><td>Sobretensión</td></tr>
+<tr><td>11 (B10)</td><td>1.0569</td><td>Sobretensión</td></tr>
+<tr><td>9 (B8)</td><td>1.0559</td><td>Sobretensión</td></tr>
+<tr><td>12 (B11)</td><td>1.0552</td><td>Sobretensión</td></tr>
+<tr><td>10 (B9)</td><td>1.0510</td><td>Sobretensión</td></tr>
+<tr><td>13 (B12)</td><td>1.0504</td><td>Sobretensión</td></tr>
+</table>
+<p>#### Post-Desconexión L1-5 (7 violaciones)</p>
+<table>
+<tr><th>Barra</th><th>V (pu)</th><th>Variación vs. Base</th><th>Tipo</th></tr>
+<tr><td>8 (B7)</td><td>1.0900</td><td>0.0000</td><td>Sobretensión</td></tr>
+<tr><td>6 (B5)</td><td>1.0700</td><td>0.0000</td><td>Sobretensión</td></tr>
+<tr><td>1 (B1)</td><td>1.0600</td><td>0.0000</td><td>Sobretensión</td></tr>
+<tr><td>7 (B6)</td><td>1.0564</td><td>−0.0051</td><td>Sobretensión</td></tr>
+<tr><td>12 (B11)</td><td>1.0548</td><td>−0.0004</td><td>Sobretensión</td></tr>
+<tr><td>11 (B10)</td><td>1.0544</td><td>−0.0025</td><td>Sobretensión</td></tr>
+<tr><td>9 (B8)</td><td>1.0504</td><td>−0.0055</td><td>Sobretensión</td></tr>
+<tr><td>~~10 (B9)~~</td><td>~~1.0510~~</td><td><strong>Saneada</strong></td><td>—</td></tr>
+<tr><td>~~13 (B12)~~</td><td>~~1.0504~~</td><td><strong>Saneada</strong></td><td>—</td></tr>
+</table>
+<h4>3. Líneas Sobrecargadas</h4>
+<p>No se registran sobrecargas en ninguno de los dos escenarios. La red IEEE_14 opera con márgenes de capacidad muy holgados (carga máxima de línea < 2 %), por lo que la pérdida de L1-5 no genera redistribución de flujos que comprometa ningún elemento remanente.</p>
+<h4>4. Interpretación Técnica</h4>
+<p><strong>La desconexión de L1-5 tiene un impacto operativo leve y parcialmente favorable:</strong></p>
+<p class="item"><strong>Sin pérdida de convergencia:</strong> La red mantiene conectividad y el flujo de Newton-Raphson converge normalmente, lo que indica que no existe isla eléctrica ni pérdida de suministro.</p>
+<p class="item"><strong>Reducción de sobretensiones:</strong> Se sanean 2 barras que estaban en violación (B9 y B12), y varias tensiones restantes bajan marginalmente. Esto sugiere que L1-5 transportaba flujo reactivo que contribuía a elevar tensiones en la zona.</p>
+<p class="item"><strong>Tensión mínima levemente reducida:</strong> V_min pasa de 1.0100 a 1.0071 pu, aún bien dentro del rango admisible.</p>
+<p class="item"><strong>Sin sobrecargas post-contingencia:</strong> La carga máxima de línea incluso disminuye (de 1.51 % a 1.37 %), indicando que la redistribución de flujos no estresa ningún elemento alternativo.</p>
+<p class="item"><strong>Leve aumento en transformadores:</strong> La carga máxima de trafo sube de 0.45 % a 0.48 %, variación insignificante.</p>
+<p><strong>Conclusión:</strong> La contingencia N-1 en L1-5 resulta <strong>segura</strong> para el sistema IEEE_14 en estas condiciones de carga. No se activan sobrecargas ni subtensiones, y el perfil de tensiones mejora marginalmente. En un contexto operativo real, se recomendaría igualmente reponer la línea a la brevedad para restablecer redundancia de red.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 5<span class="hora">11:52:39</span></div>
+                <div class="usuario">Carga la red CR_Max y dame un resumen</div>
+                <p class="meta">run_power_flow · 2 iter · 18.2s · $0.0299</p>
+                <div class="respuesta">
+                    <p>Aquí está el resumen de la red <strong>CR_Max</strong> tras ejecutar el flujo de potencia con el método Newton-Raphson:</p>
+<h4>Resumen Global — Red CR_Max (Escenario de Demanda Máxima)</h4>
+<table>
+<tr><th>Parámetro</th><th>Valor</th></tr>
+<tr><td><strong>Convergencia</strong></td><td>Si</td></tr>
+<tr><td><strong>Número de barras</strong></td><td>524 (513 con resultado*)</td></tr>
+<tr><td><strong>Número de líneas</strong></td><td>137</td></tr>
+<tr><td><strong>Número de transformadores</strong></td><td>256</td></tr>
+<tr><td><strong>Tensión mínima observada</strong></td><td>0.7521 pu</td></tr>
+<tr><td><strong>Tensión máxima observada</strong></td><td>1.2474 pu</td></tr>
+<tr><td><strong>Carga máxima de líneas</strong></td><td>59.20 %</td></tr>
+<tr><td><strong>Carga máxima de transformadores</strong></td><td>88.72 %</td></tr>
+</table>
+<p>*11 barras sin resultado por diseño operativo: 3 unidades no despachadas y 8 devanados terciarios desactivados.*</p>
+<h4>Observaciones Técnicas</h4>
+<p class="item"><strong>El flujo convergió correctamente</strong>, lo que indica consistencia topológica y de despacho para el escenario de demanda máxima.</p>
+<p class="item"><strong>Perfil de tensiones fuera del rango estándar (0.95–1.05 pu):</strong> el rango observado (0.7521–1.2474 pu) es amplio y característico del modelo CR. Esto implica que se esperan <strong>numerosas violaciones de tensión</strong> al evaluar con los umbrales operacionales estándar, lo cual es una condición conocida de este modelo.</p>
+<p class="item"><strong>Líneas sin sobrecarga:</strong> la carga máxima en líneas (59.20%) se encuentra por debajo del límite del 100%, por lo que no hay líneas sobrecargadas en este escenario.</p>
+<p class="item"><strong>Transformadores:</strong> el transformador más cargado alcanza el 88.72% de su capacidad, dentro del límite nominal pero cercano al umbral operacional. Vale la pena monitorear.</p>
+<p>Para un análisis más detallado puede solicitarme: violaciones de tensión, líneas/transformadores con mayor carga, o análisis de contingencias.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 6<span class="hora">11:52:51</span></div>
+                <div class="usuario">¿Cuáles son las 5 peores violaciones de tensión en esta red?</div>
+                
+                <div class="respuesta">
+                    <p>Antes de poder responder, necesito saber qué red desea analizar. No hay ninguna red cargada actualmente en la sesión.</p>
+<p>¿Podría indicarme el nombre de la red? Algunas opciones frecuentes son:</p>
+<table>
+<tr><th>Red</th><th>Descripción</th></tr>
+<tr><td>`IEEE_14`</td><td>Red estándar de 14 barras</td></tr>
+<tr><td>`IEEE_30`</td><td>Red estándar de 30 barras</td></tr>
+<tr><td>`IEEE_118`</td><td>Red estándar de 118 barras</td></tr>
+<tr><td>`CR_Min`</td><td>Red de Costa Rica – demanda mínima</td></tr>
+<tr><td>`CR_Med`</td><td>Red de Costa Rica – demanda media</td></tr>
+<tr><td>`CR_Max`</td><td>Red de Costa Rica – demanda máxima</td></tr>
+</table>
+<p>Si desea ver el catálogo completo, puedo consultarlo también. ¿Con cuál red desea trabajar?</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 7<span class="hora">11:53:13</span></div>
+                <div class="usuario">CR_Max</div>
+                <p class="meta">run_power_flow · 2 iter · 11.9s · $0.0300</p>
+                <div class="respuesta">
+                    <p>El flujo de potencia convergió exitosamente. A continuación el resumen del estado de la red <strong>CR_Max</strong> (escenario de demanda máxima):</p>
+<h3>Resumen — Red CR_Max</h3>
+<table>
+<tr><th>Parámetro</th><th>Valor</th></tr>
+<tr><td><strong>Convergencia</strong></td><td>Si</td></tr>
+<tr><td><strong>Barras totales</strong></td><td>524</td></tr>
+<tr><td><strong>Barras con resultado</strong></td><td>513</td></tr>
+<tr><td><strong>Barras sin resultado</strong></td><td>11 *(3 unidades no despachadas + 8 devanados terciarios desactivados)*</td></tr>
+<tr><td><strong>Líneas</strong></td><td>137</td></tr>
+<tr><td><strong>Transformadores</strong></td><td>256</td></tr>
+<tr><td><strong>V mínimo observado</strong></td><td>0.7521 pu</td></tr>
+<tr><td><strong>V máximo observado</strong></td><td>1.2474 pu</td></tr>
+<tr><td><strong>Carga máxima de líneas</strong></td><td>59.20 %</td></tr>
+<tr><td><strong>Carga máxima de transformadores</strong></td><td>88.72 %</td></tr>
+</table>
+<h4>Observaciones técnicas</h4>
+<p class="item"><strong>Perfil de tensión:</strong> La red CR opera, por diseño del modelo, con tensiones fuera del rango estándar [0.95 – 1.05] pu. El rango observado (0.7521 – 1.2474 pu) es propio del modelo y se espera que genere un número elevado de violaciones al evaluarse contra los umbrales operacionales estándar.</p>
+<p class="item"><strong>Líneas:</strong> Sin sobrecargas — la línea más cargada llega al 59.20 %, por debajo del umbral crítico del 100 %.</p>
+<p class="item"><strong>Transformadores:</strong> El transformador más cargado alcanza el 88.72 %, cercano al límite nominal. No hay sobrecarga declarada, pero merece monitoreo.</p>
+<p class="item"><strong>11 barras sin resultado</strong> son esperables y no representan un problema numérico.</p>
+<p>¿Desea que realice un análisis de violaciones de tensión, revisión de sobrecargas, o alguna otra consulta sobre esta red?</p>
+                </div>
+            </section>
+            
+</body>
+</html>

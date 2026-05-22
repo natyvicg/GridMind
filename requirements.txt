@@ -21,7 +21,6 @@ matplotlib==3.10.8
 mypy_extensions==1.1.0
 networkx==3.6.1
 numpy==2.3.5
-openai==2.32.0
 openpyxl==3.1.5
 orderly-set==5.5.0
 packaging==25.0

@@ -1,15 +1,13 @@
 """
-definitions.py — Esquemas JSON Schema de las herramientas para Anthropic y OpenAI.
+definitions.py — Esquemas JSON Schema de las herramientas para la API de Anthropic.
 
 Arquitectura:
     BASE_DEFS es la fuente de verdad única. Cada herramienta se define una
-    sola vez con {name, description, input_schema}. Las funciones
-    build_anthropic_tools() y build_openai_tools() adaptan al formato que
-    cada API espera, sin duplicar definiciones.
+    sola vez con {name, description, input_schema}. La función
+    build_anthropic_tools() adapta al formato que la API espera.
 
-    Para agregar una herramienta nueva: añadirla a BASE_DEFS y las dos
-    listas exportadas (ANTHROPIC_TOOLS, OPENAI_TOOLS) se actualizan
-    automáticamente.
+    Para agregar una herramienta nueva: añadirla a BASE_DEFS y la lista
+    exportada (ANTHROPIC_TOOLS) se actualiza automáticamente.
 
 Notas sobre los schemas:
     - Las descripciones de v_min/v_max en get_voltage_violations distinguen
@@ -228,24 +226,4 @@ def build_anthropic_tools():
     return [dict(d) for d in BASE_DEFS]
 
 
-# ---------------------------------------------------------------------------
-# Conversión a formato OpenAI
-# ---------------------------------------------------------------------------
-
-def build_openai_tools():
-    """OpenAI usa {type:'function', function:{name, description, parameters}}."""
-    return [
-        {
-            "type": "function",
-            "function": {
-                "name": d["name"],
-                "description": d["description"],
-                "parameters": d["input_schema"],
-            },
-        }
-        for d in BASE_DEFS
-    ]
-
-
 ANTHROPIC_TOOLS = build_anthropic_tools()
-OPENAI_TOOLS = build_openai_tools()

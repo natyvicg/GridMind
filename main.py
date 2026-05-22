@@ -41,7 +41,7 @@ if not os.environ.get("ANTHROPIC_API_KEY"):
     sys.exit(1)
 
 from agent import run_react_loop
-from tools import reset_network
+from tools import reset_network, _STATE
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -79,7 +79,7 @@ BANNER = (
     + "\n"
     + "    > Carga la red IEEE_14 y dame un resumen del estado\n"
     + "    > ¿Cuáles barras tienen violaciones de tensión en CR_Max?\n"
-    + "    > Desconecta la línea 1-5 y analiza el impacto\n"
+    + "    > Desconecta la línea 1-5 de IEEE_14 y analiza el impacto\n"
     + "\n"
     + _SEP + "\n"
     + "  Comandos:\n"
@@ -533,9 +533,20 @@ def main():
         # --- Consulta al agente ---
         print("\nGridMind está pensando...\n")
 
+        # Inyectar contexto de estado para que el LLM sepa qué red hay
+        # cargada sin necesidad de historial de conversación completo.
+        contexto = ""
+        if _STATE["current_network_name"]:
+            contexto = (
+                "[Red actualmente cargada: {}. Si la consulta se refiere a "
+                "\"esta red\" o no especifica cuál, use esta.]\n\n".format(
+                    _STATE["current_network_name"]
+                )
+            )
+
         t0 = time.time()
         try:
-            result = run_react_loop(user_query=user_input, verbose=True)
+            result = run_react_loop(user_query=contexto + user_input, verbose=True)
             elapsed = time.time() - t0
 
             n_tools = len(result.get('tool_calls', []))

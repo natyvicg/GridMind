@@ -542,3 +542,4 @@ def execute_tool(tool_name, tool_input):
         return {"error": "Argumentos inválidos para {}: {}".format(tool_name, e)}
     except Exception as e:
         return {"error": "Excepción en {}: {}".format(tool_name, e)}
+    

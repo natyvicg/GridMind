@@ -193,3 +193,4 @@ def run_react_loop(user_query, client=None, system=SYSTEM_PROMPT, verbose=False)
         "iterations": iterations,
         "stop_reason": last_stop_reason,
     }
+
