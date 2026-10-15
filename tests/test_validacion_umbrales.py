@@ -20,11 +20,17 @@ import sys
 import pandas as pd
 import pandapower as pp
 
-# Stub red_cr_loader para que tools.py importe sin archivos CR
-class _StubMod:
+# Stub de red_cr_loader para que tools.py importe sin necesitar los
+# archivos Excel de la red CR. Debe exponer TODO lo que tools.py importa
+# de ese modulo: cargar_red_cr y limpiar_cache.
+class _StubRedCrLoader:
     def cargar_red_cr(self, escenario):
         return None
-sys.modules.setdefault("red_cr_loader", _StubMod())
+
+    def limpiar_cache(self):
+        return None
+
+sys.modules.setdefault("red_cr_loader", _StubRedCrLoader())
 
 import tools  # noqa: E402
 
@@ -92,5 +98,24 @@ assert "warning" not in r, "FALLO: no debería haber warning"
 print("  OK\n")
 
 print("=" * 70)
-print("TODOS LOS TESTS PASARON ✅")
+print("Test 6: la red de prueba no tiene datos de cortocircuito")
+print("=" * 70)
+r = tools.run_short_circuit()
+print(f"  error: {r.get('error', '(ninguno)')[:80]}...")
+assert "error" in r, "FALLO: deberia informar que faltan datos"
+assert "datos_faltantes" in r, "FALLO: deberia nombrar los datos faltantes"
+assert r["datos_faltantes"], "FALLO: la lista de faltantes no deberia estar vacia"
+print(f"  faltantes reportados: {len(r['datos_faltantes'])}")
+print("  OK\n")
+
+print("=" * 70)
+print("Test 7: tipo de falla invalido")
+print("=" * 70)
+r = tools.run_short_circuit(fault_type="1ph")
+print(f"  error: {r.get('error', '(ninguno)')[:80]}...")
+assert "error" in r and "1ph" in r["error"], "FALLO: deberia rechazar 1ph"
+print("  OK\n")
+
+print("=" * 70)
+print("TODOS LOS TESTS PASARON")
 print("=" * 70)

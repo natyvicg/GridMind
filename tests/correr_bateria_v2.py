@@ -13,6 +13,24 @@ Uso:
     python correr_bateria_v2.py
 """
 
+# ---------------------------------------------------------------------------
+# Arranque de rutas
+# ---------------------------------------------------------------------------
+# Este archivo vive en tests/ pero importa modulos de la raiz del proyecto
+# (red_cr_loader, tools, agent) y modulos hermanos de tests/ (ground_truth,
+# validar_agente). Sin esto, ni "python -m tests.X" ni "python tests/X.py"
+# resuelven ambos grupos de imports a la vez.
+import os as _os
+import sys as _sys
+from pathlib import Path as _Path
+
+_RAIZ = _Path(__file__).resolve().parent.parent
+for _ruta in (str(_RAIZ), str(_RAIZ / "tests")):
+    if _ruta not in _sys.path:
+        _sys.path.insert(0, _ruta)
+_os.chdir(_RAIZ)
+
+
 import json
 import os
 import sys
@@ -254,7 +272,7 @@ def main():
 
     print()
     print(f"[{_ts()}] Próximo paso: correr validar_agente.py apuntando a {LOG_PATH.name}")
-    print(f"           Resultado esperado: 108/108 chequeos coinciden (100 %).")
+    print(f"           Resultado esperado: 96/96 chequeos coinciden (100 %).")
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ Funciones disponibles:
     run_power_flow          Carga red y ejecuta flujo de potencia Newton-Raphson.
     get_voltage_violations  Detecta barras con tensión fuera de rango operacional.
     get_overloaded_lines    Detecta líneas con cargabilidad excesiva.
+    run_short_circuit       Corriente de cortocircuito trifásica (IEC 60909).
     disconnect_line         Desconecta una línea (simulación N-1).
     reconnect_line          Reconecta una línea previamente desconectada.
     modify_load             Modifica P y/o Q de una carga existente.
@@ -25,13 +26,36 @@ Validación de inputs:
     umbrales operacionales (0.95/1.05 estándar) y valores observados.
     Emite warning blando si los umbrales son inusuales, error duro si
     v_min >= v_max.
+
+Procedencia de datos en cortocircuito:
+    run_short_circuit no calcula si la red carece de los parámetros que
+    IEC 60909 requiere: informa cuáles faltan y no inventa ninguno. Si
+    el usuario pide calcular igual con parámetros típicos, el resultado
+    se devuelve rotulado como basado en supuestos declarados y no en el
+    modelo. La lógica de datos vive en datos_cortocircuito.py.
 """
 
 import math
 import pandapower as pp
 import pandapower.networks as pn
+import pandapower.shortcircuit as pp_sc
 
 from red_cr_loader import cargar_red_cr, limpiar_cache as _limpiar_cache_cr
+from datos_cortocircuito import (
+    preparar_red_cr as _preparar_cc_cr,
+    aplicar_parametros_tipicos as _parametros_cc_tipicos,
+    diagnosticar as _diagnosticar_cc,
+    ENDTEMP_MIN_DEGREE as _ENDTEMP_MIN,
+)
+
+
+# Corriente de cortocircuito por encima de la cual el resultado se
+# considera físicamente implausible en una red de transmisión. Sirve de
+# guarda: algunas redes de prueba traen tensiones nominales que son solo
+# marcadores de posición (IEEE 14 tiene barras declaradas en 0.208 kV),
+# y con esas tensiones cualquier potencia de falla produce corrientes
+# absurdas. Ver run_short_circuit.
+ICC_IMPLAUSIBLE_KA = 200.0
 
 
 # ---------------------------------------------------------------------------
@@ -126,6 +150,7 @@ AVAILABLE_NETWORKS = {
 _STATE = {
     "net": None,                   # pp.Network actualmente cargada
     "current_network_name": None,  # Clave del catálogo (ej. "IEEE_14", "CR_Min")
+    "endtemp_asumida": False,      # True si endtemp_degree se rellenó con el supuesto
 }
 
 
@@ -161,6 +186,7 @@ def _load_network(network_name):
 
     _STATE["net"] = net
     _STATE["current_network_name"] = network_name
+    _STATE["endtemp_asumida"] = False
     return net
 
 
@@ -179,6 +205,25 @@ def _safe_float(x):
     if math.isnan(f):
         return None
     return f
+
+
+def _iteraciones_nr(net):
+    """
+    Devuelve el número de iteraciones que le tomó converger a
+    Newton-Raphson, o None si PandaPower no lo expuso.
+
+    PandaPower guarda el dato en net._ppc["iterations"]. Es un atributo
+    interno, así que se lee de forma defensiva: si una versión futura lo
+    mueve o lo renombra, la herramienta devuelve None en vez de fallar.
+    """
+    try:
+        ppc = getattr(net, "_ppc", None)
+        if not ppc:
+            return None
+        it = ppc.get("iterations")
+        return int(it) if it is not None else None
+    except Exception:
+        return None
 
 
 def _net_or_error():
@@ -232,6 +277,7 @@ def run_power_flow(network=None):
     res = {
         "network": network,
         "converged": bool(getattr(net, "converged", True)),
+        "iterations_nr": _iteraciones_nr(net),
         "n_buses": int(len(net.bus)),
         "n_buses_with_result": int(len(vm_pu)),
         "n_lines": int(len(net.line)),
@@ -261,10 +307,30 @@ def run_power_flow(network=None):
 
 def get_voltage_violations(v_min=0.95, v_max=1.05, limit=20):
     """
-    Devuelve las barras cuya tensión está fuera de [v_min, v_max]. Resultado
-    ordenado por severidad (las más bajas primero, luego las más altas).
-    El parámetro `limit` recorta a las N más severas para evitar inflar el
-    contexto del LLM con redes grandes.
+    Devuelve las barras cuya tensión está fuera de [v_min, v_max].
+
+    Orden del resultado
+    -------------------
+    `violations` va ordenada por DESVIACIÓN ABSOLUTA respecto al umbral
+    violado, de mayor a menor, mezclando subtensiones y sobretensiones.
+    Una barra en 1.2474 pu (desviación 0.1974 sobre el límite superior)
+    aparece antes que una en 0.9363 pu (desviación 0.0137 bajo el
+    inferior), que es lo que significa "más severa".
+
+    La versión anterior concatenaba primero todas las subtensiones y
+    después todas las sobretensiones. Con `limit` aplicado sobre una red
+    con muchas subtensiones, eso escondía las sobretensiones severas: en
+    la red CR llegaban a quedar fuera 10 de las 11 sobretensiones, todas
+    más severas que la última subtensión listada.
+
+    Garantías independientes de `limit`
+    -----------------------------------
+      - `n_subtension` y `n_sobretension`: conteos completos, sin recortar.
+      - `top5_subtension` y `top5_sobretension`: las 5 peores de cada
+        tipo, SIEMPRE presentes. Aunque `limit` sea 1, ninguna violación
+        severa queda invisible.
+
+    Cada fila incluye `desviacion_pu`, para que el orden sea verificable.
 
     Validación de umbrales:
       - v_min y v_max deben ser umbrales OPERACIONALES, no valores
@@ -312,27 +378,49 @@ def get_voltage_violations(v_min=0.95, v_max=1.05, limit=20):
     altas = vm[vm > v_max].sort_values(ascending=False)
 
     def _fila(idx, val, tipo):
+        desviacion = (v_min - val) if tipo == "subtension" else (val - v_max)
         return {
             "bus_index": int(idx) if isinstance(idx, (int, float)) else idx,
             "vm_pu": _safe_float(val),
             "tipo": tipo,
+            "desviacion_pu": _safe_float(round(float(desviacion), 5)),
         }
 
-    violaciones = (
-        [_fila(i, v, "subtension") for i, v in bajas.items()]
-        + [_fila(i, v, "sobretension") for i, v in altas.items()]
+    filas_bajas = [_fila(i, v, "subtension") for i, v in bajas.items()]
+    filas_altas = [_fila(i, v, "sobretension") for i, v in altas.items()]
+
+    # Severidad real: desviación absoluta respecto al umbral violado.
+    por_severidad = sorted(
+        filas_bajas + filas_altas,
+        key=lambda f: f["desviacion_pu"] or 0.0,
+        reverse=True,
     )
 
     resultado = {
         "network": _STATE["current_network_name"],
         "v_min_threshold": v_min,
         "v_max_threshold": v_max,
-        "n_violations_total": len(violaciones),
+        "n_violations_total": len(por_severidad),
         "n_subtension": int(len(bajas)),
         "n_sobretension": int(len(altas)),
         "limit_applied": limit,
-        "violations": violaciones[:limit],
+        "orden": (
+            "por desviación absoluta respecto al umbral violado, de mayor "
+            "a menor, mezclando subtensiones y sobretensiones"
+        ),
+        "violations": por_severidad[:limit],
+        "top5_subtension": filas_bajas[:5],
+        "top5_sobretension": filas_altas[:5],
     }
+
+    if len(por_severidad) > limit:
+        resultado["nota_limite"] = (
+            "La lista `violations` está recortada a {} de {} violaciones. "
+            "Los conteos por tipo y las listas top5_subtension y "
+            "top5_sobretension son completos y no dependen de este "
+            "recorte.".format(limit, len(por_severidad))
+        )
+
     if warnings:
         resultado["warning"] = " | ".join(warnings)
     return resultado
@@ -344,41 +432,331 @@ def get_voltage_violations(v_min=0.95, v_max=1.05, limit=20):
 
 def get_overloaded_lines(loading_threshold=100.0, limit=20):
     """
-    Devuelve las líneas cuya carga supera el umbral (en %), ordenadas de
-    mayor a menor carga. `limit` recorta para no inflar contexto.
+    Devuelve los elementos cuya cargabilidad supera el umbral (en %),
+    ordenados de mayor a menor carga. `limit` recorta para no inflar
+    contexto.
+
+    Cubre líneas Y transformadores. La distinción importa: la red de
+    Costa Rica tiene 137 líneas y 256 transformadores (106 de dos
+    devanados y 150 de tres), así que revisar solo líneas dejaría fuera
+    a la mayoría de los elementos serie de la red. Una contingencia que
+    sobrecarga un transformador sin sobrecargar ninguna línea es un caso
+    real, no hipotético.
+
+    Los conteos se devuelven SEPARADOS por tipo de elemento:
+      - n_overloaded_total: solo líneas (semántica histórica, se
+        mantiene por compatibilidad con la batería de validación).
+      - n_overloaded_trafos: transformadores de dos y tres devanados.
+      - n_overloaded_elementos: la suma de ambos.
+
+    Si hay transformadores sobrecargados pero ninguna línea, el
+    resultado incluye un warning, para que la ausencia de líneas
+    sobrecargadas no se reporte como ausencia de sobrecargas.
     """
     net, err = _net_or_error()
     if err:
         return err
 
-    if net.res_line.empty:
-        return {"error": "No hay resultados de líneas. Llame run_power_flow primero."}
+    if net.res_line.empty and net.res_trafo.empty:
+        return {"error": "No hay resultados de flujo. Llame run_power_flow primero."}
 
-    loading = net.res_line["loading_percent"].dropna()
-    sobrecargadas = loading[loading > loading_threshold].sort_values(ascending=False)
-
+    # --- Líneas ---
     filas = []
-    for line_idx, lp in sobrecargadas.items():
-        from_bus = net.line.at[line_idx, "from_bus"]
-        to_bus = net.line.at[line_idx, "to_bus"]
-        filas.append({
-            "line_index": int(line_idx),
-            "from_bus": int(from_bus) if not math.isnan(float(from_bus)) else None,
-            "to_bus": int(to_bus) if not math.isnan(float(to_bus)) else None,
-            "loading_percent": _safe_float(lp),
-        })
+    if not net.res_line.empty:
+        loading = net.res_line["loading_percent"].dropna()
+        sobrecargadas = loading[loading > loading_threshold].sort_values(ascending=False)
+        for line_idx, lp in sobrecargadas.items():
+            from_bus = net.line.at[line_idx, "from_bus"]
+            to_bus = net.line.at[line_idx, "to_bus"]
+            filas.append({
+                "line_index": int(line_idx),
+                "from_bus": int(from_bus) if not math.isnan(float(from_bus)) else None,
+                "to_bus": int(to_bus) if not math.isnan(float(to_bus)) else None,
+                "loading_percent": _safe_float(lp),
+            })
 
-    return {
+    # --- Transformadores de dos y tres devanados ---
+    trafos = []
+    for tabla_res, tabla_el, tipo, buses in (
+        ("res_trafo", "trafo", "trafo_2w", ("hv_bus", "lv_bus")),
+        ("res_trafo3w", "trafo3w", "trafo_3w", ("hv_bus", "mv_bus", "lv_bus")),
+    ):
+        res = getattr(net, tabla_res, None)
+        if res is None or res.empty or "loading_percent" not in res.columns:
+            continue
+        el = getattr(net, tabla_el)
+        carga = res["loading_percent"].dropna()
+        for idx, lp in carga[carga > loading_threshold].sort_values(ascending=False).items():
+            fila = {
+                "trafo_index": int(idx),
+                "tipo": tipo,
+                "loading_percent": _safe_float(lp),
+            }
+            for campo in buses:
+                if campo in el.columns:
+                    valor = el.at[idx, campo]
+                    try:
+                        fila[campo] = int(valor)
+                    except (TypeError, ValueError):
+                        fila[campo] = None
+            trafos.append(fila)
+
+    trafos.sort(key=lambda f: f["loading_percent"] or 0.0, reverse=True)
+
+    resultado = {
         "network": _STATE["current_network_name"],
         "loading_threshold_percent": loading_threshold,
         "n_overloaded_total": len(filas),
+        "n_overloaded_trafos": len(trafos),
+        "n_overloaded_elementos": len(filas) + len(trafos),
         "limit_applied": limit,
         "overloaded_lines": filas[:limit],
+        "overloaded_trafos": trafos[:limit],
     }
+
+    if trafos and not filas:
+        resultado["warning"] = (
+            "No hay líneas sobrecargadas, pero SÍ hay {} transformador(es) "
+            "por encima del {} %. NO reporte que la red está sin sobrecargas: "
+            "informe las sobrecargas de transformador, que son igual de "
+            "relevantes desde el punto de vista térmico.".format(
+                len(trafos), loading_threshold
+            )
+        )
+
+    return resultado
+
 
 
 # ---------------------------------------------------------------------------
-# 4. disconnect_line
+# 4. run_short_circuit
+# ---------------------------------------------------------------------------
+
+def run_short_circuit(fault_type="3ph", case="max", limit=20,
+                      s_sc_interconexion_mva=None, parametros_tipicos=False):
+    """
+    Calcula la corriente de cortocircuito según IEC 60909 sobre la red
+    cargada. Devuelve la corriente inicial simétrica Ik" (ikss_ka) por
+    barra, más los extremos y las barras de mayor corriente.
+
+    Procedencia de datos (regla dura)
+    ---------------------------------
+    El cálculo requiere la impedancia de las fuentes, que el flujo de
+    carga no usa. La red de Costa Rica la trae del modelo PSS/E de
+    origen. Las redes de prueba IEEE no la traen: se publicaron como
+    casos de flujo de carga y ese parámetro nunca formó parte de ellas.
+
+    Si la red no tiene los datos, esta herramienta NO inventa valores:
+    devuelve un error nombrando exactamente qué falta. Solo si el
+    usuario pide explícitamente parametros_tipicos=True se calcula con
+    valores de literatura, y en ese caso el resultado se rotula como
+    basado en supuestos, con un warning.
+
+    Requiere haber ejecutado run_power_flow previamente (la red debe
+    estar cargada).
+    """
+    net, err = _net_or_error()
+    if err:
+        return err
+
+    red = _STATE["current_network_name"]
+
+    if fault_type not in ("3ph", "2ph"):
+        return {
+            "error": (
+                "Tipo de falla no soportado: {!r}. Use '3ph' (trifásica, "
+                "la del caso base de IEC 60909) o '2ph' (bifásica). Las "
+                "fallas monofásicas requieren datos de secuencia cero que "
+                "los modelos disponibles no incluyen.".format(fault_type)
+            )
+        }
+
+    if case not in ("max", "min"):
+        return {
+            "error": (
+                "Caso no soportado: {!r}. Use 'max' (corriente máxima de "
+                "cortocircuito) o 'min' (mínima).".format(case)
+            )
+        }
+
+    # --- Preparación de datos según la red ---
+    supuestos = []
+    correccion = None
+    datos_del_modelo = True
+    nombres = {}
+
+    if red and red.startswith("CR_"):
+        escenario = red.split("_", 1)[1]
+        kwargs = {}
+        if s_sc_interconexion_mva is not None:
+            kwargs["s_sc_interconexion_mva"] = float(s_sc_interconexion_mva)
+        try:
+            net, informe = _preparar_cc_cr(net, escenario, **kwargs)
+        except (RuntimeError, FileNotFoundError, ValueError) as e:
+            return {
+                "error": (
+                    "No se pudieron preparar los datos de cortocircuito de "
+                    "{}: {}".format(red, e)
+                )
+            }
+        fuente = informe["fuente_xdss"]
+        supuestos = list(informe["supuestos"])
+        correccion = informe["correccion_de_mapeo"]
+        nombres = informe.get("nombres_barras") or {}
+    else:
+        diagnostico = _diagnosticar_cc(net)
+        if diagnostico["apta"]:
+            fuente = "parámetros de cortocircuito presentes en el modelo"
+        elif not parametros_tipicos:
+            return {
+                "error": (
+                    "La red {} no contiene los parámetros que requiere el "
+                    "cálculo de cortocircuito. Los casos de prueba IEEE se "
+                    "publicaron como benchmarks de flujo de carga y no "
+                    "incluyen impedancias de fuente.".format(red)
+                ),
+                "datos_faltantes": diagnostico["faltantes"],
+                "como_proceder": (
+                    "Para un cálculo con datos reales, use una de las redes "
+                    "de Costa Rica (CR_Min, CR_Med, CR_Max), cuyo modelo de "
+                    "origen sí trae la impedancia de las 108 máquinas. Si "
+                    "aun así desea un cálculo indicativo con parámetros "
+                    "típicos de literatura, invoque esta herramienta con "
+                    "parametros_tipicos=true; el resultado quedará rotulado "
+                    "como basado en supuestos y no en el modelo."
+                ),
+            }
+        else:
+            net, informe = _parametros_cc_tipicos(net)
+            fuente = informe["fuente_xdss"]
+            supuestos = list(informe["supuestos"])
+            datos_del_modelo = False
+
+    # --- Caso mínimo: el modelo no distingue Ssc mínima de máxima ---
+    if case == "min" and len(net.ext_grid):
+        if "s_sc_max_mva" in net.ext_grid.columns:
+            net.ext_grid["s_sc_min_mva"] = net.ext_grid["s_sc_max_mva"]
+            net.ext_grid["rx_min"] = net.ext_grid["rx_max"]
+            supuestos.append(
+                "Caso mínimo: se usa la misma potencia de cortocircuito de "
+                "red externa que en el caso máximo, porque el modelo no "
+                "distingue entre ambas condiciones."
+            )
+
+    # --- Caso mínimo: temperatura final de conductor ---
+    # IEC 60909 corrige la resistencia de las líneas a la temperatura que
+    # alcanzan al final del cortocircuito y pandapower exige el dato
+    # (net.line.endtemp_degree) en el caso mínimo. Ningún modelo lo trae:
+    # se asume un valor declarado y se informa como supuesto.
+    if case == "min" and len(net.line):
+        if "endtemp_degree" not in net.line.columns:
+            net.line["endtemp_degree"] = float("nan")
+        faltan = net.line["endtemp_degree"].isna()
+        if faltan.any():
+            net.line.loc[faltan, "endtemp_degree"] = float(_ENDTEMP_MIN)
+            _STATE["endtemp_asumida"] = True
+        if _STATE["endtemp_asumida"]:
+            supuestos.append(
+                "Caso mínimo: temperatura final de conductor de {:.0f} °C "
+                "para las líneas, usada para corregir su resistencia según "
+                "IEC 60909 (el modelo no contiene el dato)."
+                .format(_ENDTEMP_MIN)
+            )
+
+    # --- Cálculo ---
+    try:
+        pp_sc.calc_sc(net, fault=fault_type, case=case)
+    except Exception as e:
+        return {
+            "error": "Error en el cálculo de cortocircuito: {}".format(e)
+        }
+
+    if net.res_bus_sc.empty or "ikss_ka" not in net.res_bus_sc.columns:
+        return {"error": "El cálculo de cortocircuito no produjo resultados."}
+
+    ik = net.res_bus_sc["ikss_ka"].dropna()
+    if not len(ik):
+        return {"error": "Ninguna barra obtuvo resultado de cortocircuito."}
+
+    ordenadas = ik.sort_values(ascending=False)
+
+    def _fila(idx):
+        # Nombre de subestación: primero el mapa del Excel (red CR), que
+        # trae el nombre real; si no, el campo name de la red.
+        nombre = nombres.get(int(idx))
+        if not nombre and "name" in net.bus.columns:
+            crudo = net.bus.at[idx, "name"]
+            if crudo is not None and not (isinstance(crudo, float) and math.isnan(crudo)):
+                nombre = str(crudo).strip().strip("'").strip()
+        fila = {
+            "bus_index": int(idx),
+            "nombre": nombre,
+            "vn_kv": _safe_float(net.bus.at[idx, "vn_kv"]),
+            "ikss_ka": _safe_float(net.res_bus_sc.at[idx, "ikss_ka"]),
+        }
+        if "skss_mw" in net.res_bus_sc.columns:
+            fila["skss_mva"] = _safe_float(net.res_bus_sc.at[idx, "skss_mw"])
+        return fila
+
+    resultado = {
+        "network": red,
+        "norma": "IEC 60909",
+        "tipo_falla": fault_type,
+        "caso": case,
+        "fuente_datos": fuente,
+        "datos_de_maquina_del_modelo": datos_del_modelo,
+        "n_buses": int(len(net.bus)),
+        "n_buses_with_result": int(len(ik)),
+        "ikss_max_ka": _safe_float(ordenadas.iloc[0]),
+        "bus_ikss_max": int(ordenadas.index[0]),
+        "ikss_min_ka": _safe_float(ordenadas.iloc[-1]),
+        "bus_ikss_min": int(ordenadas.index[-1]),
+        "ikss_median_ka": _safe_float(ik.median()),
+        "limit_applied": limit,
+        "buses_mayor_corriente": [_fila(i) for i in ordenadas.index[:limit]],
+        "supuestos": supuestos,
+    }
+
+    if correccion:
+        resultado["correccion_de_datos_aplicada"] = correccion
+
+    avisos = []
+
+    if not datos_del_modelo:
+        avisos.append(
+            "Resultado calculado con parámetros típicos de literatura, NO "
+            "con datos del modelo. Las corrientes son indicativas y no "
+            "deben presentarse como características de esta red."
+        )
+
+    # Guarda de plausibilidad física. Varias redes de prueba traen
+    # tensiones nominales que son marcadores de posición heredados de la
+    # conversión de formato (IEEE 14 declara barras en 0.208 kV). Con esas
+    # tensiones, cualquier potencia de falla produce corrientes absurdas.
+    icc_max = resultado["ikss_max_ka"]
+    if icc_max is not None and icc_max > ICC_IMPLAUSIBLE_KA:
+        vn_min = _safe_float(net.bus.loc[ik.index, "vn_kv"].min())
+        avisos.append(
+            "La corriente máxima calculada ({:.0f} kA) excede cualquier "
+            "valor físicamente razonable en una red de potencia. La causa "
+            "más probable es que las tensiones nominales del modelo sean "
+            "marcadores de posición y no datos reales (la mínima con "
+            "resultado es {} kV). NO presente estas cifras como "
+            "características de la red: informe al usuario que el modelo "
+            "no admite un cálculo de cortocircuito válido.".format(
+                icc_max, vn_min
+            )
+        )
+        resultado["resultado_implausible"] = True
+
+    if avisos:
+        resultado["warning"] = " | ".join(avisos)
+
+    return resultado
+
+
+# ---------------------------------------------------------------------------
+# 5. disconnect_line
 # ---------------------------------------------------------------------------
 
 def disconnect_line(line_index):
@@ -407,7 +785,7 @@ def disconnect_line(line_index):
 
 
 # ---------------------------------------------------------------------------
-# 5. reconnect_line
+# 6. reconnect_line
 # ---------------------------------------------------------------------------
 
 def reconnect_line(line_index):
@@ -436,7 +814,7 @@ def reconnect_line(line_index):
 
 
 # ---------------------------------------------------------------------------
-# 6. modify_load
+# 7. modify_load
 # ---------------------------------------------------------------------------
 
 def modify_load(load_index, new_p_mw=None, new_q_mvar=None):
@@ -470,7 +848,7 @@ def modify_load(load_index, new_p_mw=None, new_q_mvar=None):
 
 
 # ---------------------------------------------------------------------------
-# 7. list_available_networks
+# 8. list_available_networks
 # ---------------------------------------------------------------------------
 
 def list_available_networks():
@@ -493,7 +871,7 @@ def list_available_networks():
 
 
 # ---------------------------------------------------------------------------
-# 8. reset_network
+# 9. reset_network
 # ---------------------------------------------------------------------------
 
 def reset_network():
@@ -505,6 +883,7 @@ def reset_network():
     """
     _STATE["net"] = None
     _STATE["current_network_name"] = None
+    _STATE["endtemp_asumida"] = False
     _limpiar_cache_cr()
     return {"status": "reset", "note": "Red descargada. Llame run_power_flow para cargar una nueva."}
 
@@ -517,6 +896,7 @@ TOOL_FUNCTIONS = {
     "run_power_flow": run_power_flow,
     "get_voltage_violations": get_voltage_violations,
     "get_overloaded_lines": get_overloaded_lines,
+    "run_short_circuit": run_short_circuit,
     "disconnect_line": disconnect_line,
     "reconnect_line": reconnect_line,
     "modify_load": modify_load,

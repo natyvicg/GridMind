@@ -27,6 +27,7 @@ Usuario → [consulta en lenguaje natural]
 | `run_power_flow` | Carga red y ejecuta flujo de potencia |
 | `get_voltage_violations` | Detecta barras con tensión fuera del rango operacional |
 | `get_overloaded_lines` | Detecta líneas con cargabilidad excesiva |
+| `run_short_circuit` | Corriente de cortocircuito trifásica (IEC 60909) |
 | `disconnect_line` | Desconecta una línea (simulación N-1) |
 | `reconnect_line` | Reconecta una línea previamente desconectada |
 | `modify_load` | Modifica potencia activa/reactiva de una carga |
@@ -71,10 +72,13 @@ python main.py
 ```bash
 python --version          # Debe ser >= 3.10
 pip show pandapower       # Debe estar instalado
-python -m tests.test_validacion_umbrales   # Prueba local sin API key
+python -m tests.test_validacion_umbrales   # Umbrales e inputs, sin API key
+python -m tests.test_cortocircuito         # Cortocircuito, sin API key
+python -m tests.validar_agente             # Validación cruzada pre-mitigación
+python -m tests.validar_agente_v2          # Validación cruzada post-mitigación
 ```
 
-La prueba `test_validacion_umbrales` valida la lógica de inputs y umbrales de `tools.py` usando únicamente PandaPower (no requiere API key ni conexión a internet).
+`test_validacion_umbrales` valida la lógica de inputs y umbrales de `tools.py`. `test_cortocircuito` valida la capa de datos de cortocircuito y la guarda de procedencia. Ninguna de las dos requiere API key ni conexión a internet; la segunda sí requiere los archivos Excel de la red CR.
 
 Aparece un prompt interactivo donde podés escribir consultas en lenguaje natural. Ejemplos:
 
@@ -82,6 +86,7 @@ Aparece un prompt interactivo donde podés escribir consultas en lenguaje natura
 - *"Carga la red IEEE_39 y dame un resumen del estado"*
 - *"¿Qué pasa si desconecto la línea 1-5 en IEEE_14?"*
 - *"Para la red CR_Min, ¿cuáles son las 5 peores violaciones de tensión?"*
+- *"Corré un cortocircuito trifásico en CR_Med y dame las 5 barras con mayor corriente de falla"*
 
 ### Comandos especiales
 
@@ -91,10 +96,19 @@ Aparece un prompt interactivo donde podés escribir consultas en lenguaje natura
 | `/redes` | Muestra las 18 redes disponibles con descripción |
 | `/guardar` | Exporta la sesión completa a un archivo HTML con tema oscuro |
 | `/historial` | Muestra las consultas hechas en la sesión actual |
-| `/reset` | Descarga la red cargada (empezar de cero) |
+| `/reset` | Descarga la red cargada y borra el historial |
+| `/olvidar` | Borra el historial de conversación, conserva la red |
 | `/salir` | Termina la sesión (también `/exit`, `/quit` o Ctrl+C) |
 
-La sesión exportada con `/guardar` incluye metadata por consulta (herramientas usadas, iteraciones, tokens, costo, tiempo) y un resumen global de la sesión.
+### Memoria de la conversación
+
+GridMind recuerda las últimas 4 consultas de la sesión, así que entiende referencias como *"hacé lo mismo en IEEE_14"* o *"compará con lo anterior"*. Si una consulta queda ambigua incluso con el historial, el agente pregunta en vez de adivinar.
+
+Solo se recuerdan los pares consulta/respuesta, nunca los resultados crudos de las herramientas: en la red CR un solo resultado puede traer cientos de filas y reenviarlo en cada iteración dispararía el costo sin aportar al razonamiento. Las respuestas largas se recortan a 1200 caracteres dentro del historial.
+
+`/olvidar` corta el contexto sin perder el registro de la sesión: el HTML exportado sigue conteniendo todas las consultas.
+
+La sesión exportada con `/guardar` incluye metadata por consulta y un resumen global. Se registran dos contadores de iteraciones distintos, porque miden cosas distintas: las **iteraciones del agente** son los ciclos de razonamiento del modelo (consulta a la API, ejecución de herramienta, retorno del resultado), y las **iteraciones NR** son las que le tomó converger al método de Newton-Raphson en PandaPower. El resumen incluye además el tiempo efectivo de cómputo, separado de la duración total de la sesión.
 
 ## Redes disponibles
 
@@ -134,6 +148,31 @@ GridMind incluye 18 redes listas para usar: 15 redes IEEE estándar de PandaPowe
 - Opera con tensiones fuera del rango estándar 0.95-1.05 pu por diseño operativo (Vmin típico ~0.75-0.81 pu, Vmax ~1.20-1.25 pu). Esto es una característica del modelo, no un error.
 - 11 de 524 barras no tienen resultado en `res_bus` por despacho operativo (3 unidades no despachadas + 8 devanados terciarios desactivados). Las herramientas filtran NaN automáticamente.
 
+## Cortocircuito y procedencia de datos
+
+`run_short_circuit` calcula la corriente inicial simétrica de cortocircuito Ik" según IEC 60909. Es un cálculo algebraico de red, del mismo tipo que el flujo de carga: no hay integración en el tiempo, por lo que se mantiene dentro del alcance de análisis en estado estacionario.
+
+El cálculo requiere la impedancia de las fuentes, que el flujo de carga no utiliza. Esa diferencia determina en qué redes se puede calcular:
+
+| Red | Datos de cortocircuito | Comportamiento de la herramienta |
+|---|---|---|
+| `CR_Min`, `CR_Med`, `CR_Max` | Reactancia de las 108 máquinas, del modelo PSS/E de origen | Calcula con datos del modelo |
+| Redes IEEE | Ninguno: se publicaron como casos de flujo de carga | Informa qué parámetros faltan y no calcula |
+
+En las redes IEEE la herramienta **no estima valores**: devuelve la lista de parámetros ausentes y sugiere usar una red CR. Solo si el usuario lo pide de forma explícita (`parametros_tipicos=true`) se calcula con valores de literatura, y el resultado se devuelve rotulado como basado en supuestos, con un warning. Además, una guarda de plausibilidad detecta modelos cuyas tensiones nominales son marcadores de posición — IEEE 14 declara barras en 0.208 kV — y avisa que el resultado no es físicamente significativo.
+
+### Corrección de mapeo en la red CR
+
+La hoja `Generator Data` del Excel sigue el registro estándar de PSS/E, donde la columna `X Source (pu)` es la impedancia de máquina y `Xtran (pu)` la del transformador elevador. `red_cr.py` asigna a `xdss_pu` la columna del transformador, que en este modelo está en cero para las 108 unidades, de modo que la reactancia real nunca entra a la red.
+
+El error es silencioso en flujo de carga, porque `runpp` no usa `xdss_pu`. Se vuelve bloqueante en cortocircuito. `datos_cortocircuito.py` remapea la columna correcta sobre la red ya construida, verificando la alineación barra por barra antes de escribir, sin modificar `red_cr.py` ni los Excel.
+
+### Supuestos declarados
+
+- **Resistencia de máquina:** el modelo trae `R source (pu)` en cero; se asume R = X / 20.
+- **Tensión nominal de máquina:** se usa la de la barra de conexión, al no haber campo explícito.
+- **Interconexiones:** `red_cr.py` modela las conexiones con Nicaragua y Panamá como cinco fuentes ideales en barras que el modelo original clasifica como barras de carga. Su potencia de cortocircuito se expone como parámetro (2000 MVA por defecto). `scripts/sensibilidad_cortocircuito.py` cuantifica el efecto: variar el supuesto de 500 a 20 000 MVA cambia la corriente en las barras de interconexión un 1082 %, pero mueve la mediana del resto de la red solo un 3.1 %.
+
 ## Escenarios de validación
 
 `escenarios.py` genera automáticamente 4 escenarios estándar (ORIGINAL, BASE, SUBTENSIÓN, SOBRECARGA) para cualquiera de las 15 redes IEEE, con ground truth calculado directamente desde PandaPower. Además incluye 7 escenarios curados (E1-E7) diseñados a mano para IEEE 14 y Costa Rica.
@@ -151,6 +190,7 @@ GridMind/
 ├── escenarios.py               # Escenarios genéricos (15 IEEE) + curados (E1-E7)
 ├── red_cr.py                   # Constructor original de la red CR (no modificar)
 ├── red_cr_loader.py            # Adaptador para cargar red CR desde Excel
+├── datos_cortocircuito.py      # Capa de datos de cortocircuito (IEC 60909)
 ├── red_cr_transmisión.py       # Modelo de transmisión CR (referencia)
 ├── Base_CR_*_2023-Marzo.xlsx    # Datos de demanda CR (Min, Med, Max)
 ├── environment.yml             # Entorno conda reproducible
@@ -163,6 +203,7 @@ GridMind/
 ├── tests/                      # Validación y pruebas
 │   ├── ground_truth.py             # Cálculos directos PandaPower para validación
 │   ├── test_validacion_umbrales.py # Tests de validación de inputs (sin API)
+│   ├── test_cortocircuito.py       # Tests de la capa de cortocircuito (sin API)
 │   ├── correr_bateria.py           # Batería automatizada v1 (9 consultas CR)
 │   ├── correr_bateria_v2.py        # Batería automatizada v2 (post-corrección)
 │   ├── validar_agente.py           # Validación cruzada agente vs PandaPower
@@ -175,6 +216,7 @@ GridMind/
 │   ├── consolidar_escenarios.py    # (histórico — depende de metricas.py, ya obsoleto)
 │   ├── ejecutar_escenarios_ieee14.py # (histórico — actualizar import a escenarios.py)
 │   ├── probar_escenarios_genericos.py # Prueba de escenarios genéricos
+│   ├── sensibilidad_cortocircuito.py # Sensibilidad al supuesto de S_cc
 │   └── procesar_datos.py           # Procesamiento de datos CR
 │
 └── logs/                       # Sesiones y logs de validación
@@ -193,21 +235,36 @@ Archivos generados automáticamente (excluidos de Git via `.gitignore`):
 
 La validación cruzada compara las respuestas del agente contra cálculos directos de PandaPower en tres niveles:
 
-| Nivel | Qué verifica | Resultado |
-|---|---|---|
-| Tool | ¿Llamó las herramientas correctas? | 18/18 (100%) |
-| Data | ¿Los números coinciden con PandaPower? | 54/54 (100%) |
-| Response | ¿La respuesta final refleja los datos? | 24/24 (100%) |
-| **Total** | | **96/96 (100%)** |
+El arnés corre 9 consultas: 3 escenarios CR × 3 preguntas (resumen, violaciones de tensión, sobrecargas), y produce 96 chequeos en tres niveles.
+
+| Nivel | Qué verifica | Pre-mitigación | Post-mitigación |
+|---|---|---|---|
+| Tool | ¿Llamó las herramientas correctas, con los argumentos correctos? | 17/18 | 18/18 (100%) |
+| Data | ¿Los números coinciden con PandaPower? | 54/54 | 54/54 (100%) |
+| Response | ¿La respuesta final refleja los datos? | 24/24 | 24/24 (100%) |
+| **Total** | | **95/96 (98.96%)** | **96/96 (100%)** |
+
+Los dos resultados son reproducibles sin API key, porque la validación se corre sobre los logs de las baterías ya ejecutadas: `logs/log_bateria_v1.json` (pre) y `logs/log_bateria_v2.json` (post). Las salidas quedan en `logs/log_validacion.json` y `logs/log_validacion_v2.json`.
 
 ### Hallazgo: threshold drift
 
-Durante la validación se documentó un modo de falla donde el LLM confunde valores observados (Vmax de la red) con umbrales operacionales (1.05 pu), reportando 0 violaciones cuando sí las hay. Se mitigó con tres capas: validación runtime en `tools.py`, descripciones explícitas en `definitions.py`, y convención de umbrales en el system prompt de `agent.py`.
+Durante la validación se documentó un modo de falla donde el LLM confunde valores observados (el Vmax de la red) con umbrales operacionales (1.05 pu), y en consecuencia no busca sobretensiones. Se mitigó con tres capas: validación runtime en `tools.py`, descripciones explícitas en `definitions.py`, y convención de umbrales en el system prompt de `agent.py`.
+
+La validación pre-mitigación falla en **un solo chequeo de los 96**, y es exactamente este:
+
+```
+CR_Min · Q2_subtensiones | get_voltage_violations.v_max | agente = 1.25415 | esperado = 1.05
+```
+
+El detalle metodológico importa: la falla aparece únicamente en el nivel **tool**, mientras que los niveles data y response quedan en 54/54 y 24/24. La razón es que el agente reportó correctamente los números que obtuvo — simplemente nunca buscó sobretensiones. Comparar solo cifras contra ground truth no habría detectado nada, porque las cifras eran internamente consistentes. Por eso el error es de razonamiento y no de cálculo, y por eso hacen falta los tres niveles: uno solo no lo encuentra.
 
 ## Limitaciones conocidas
 
-- **Alcance de simulación**: flujo de carga estacionario únicamente. No incluye estudios dinámicos, transitorios, cortocircuito ni flujo óptimo de potencia.
+- **Alcance de simulación**: análisis en estado estacionario. Incluye flujo de carga y cortocircuito según IEC 60909, ambos cálculos algebraicos de red. No incluye estudios en dominio del tiempo — estabilidad electromecánica ni transitorios electromagnéticos — ni flujo óptimo de potencia.
+- **Datos de cortocircuito en redes IEEE**: los casos de prueba IEEE no incluyen impedancia de fuente, por lo que el cortocircuito solo se calcula con datos reales sobre la red de Costa Rica. La herramienta lo informa explícitamente en vez de estimar.
+- **Potencia de cortocircuito de las interconexiones**: no está en el modelo de origen y se trata como parámetro declarado. Su efecto es local (ver el análisis de sensibilidad).
 - **Tensiones CR fuera de rango**: la red CR opera con tensiones que violan el rango estándar. Esto es una propiedad del modelo y se documenta como limitación reconocida.
+- **Sin memoria entre sesiones**: el historial vive solo mientras la sesión está abierta y cubre las últimas 4 consultas. Al cerrar `main.py` se pierde; el registro exportado con `/guardar` queda, pero no se recarga.
 - **Determinismo del LLM**: las respuestas del agente no son 100% determinísticas. La validación de umbrales (3 capas) y la validación cruzada periódica mitigan este riesgo.
 - **Archivo Max hardcoded**: `red_cr.py` tiene hardcoded el nombre `Base_CR_Max_2023-Marzo.xlsx`. El loader (`red_cr_loader.py`) maneja esto con backup permanente y restauración automática. No borrar `_Backup_Max_2023-Marzo.xlsx`.
 

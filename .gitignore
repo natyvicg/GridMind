@@ -25,3 +25,6 @@ viabilidad_escenarios_ieee.xlsx
 # OS
 Thumbs.db
 .DS_Store
+
+# Borradores y documentos del TFG (no son código)
+borradores_tfg/

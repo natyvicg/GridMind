@@ -16,6 +16,24 @@ Convenciones (coherentes con Día 4 y con tools.py de Día 6):
   - Q3 (sobrecargas): conteo y top-5 con loading_percent > 100, sólo líneas
 """
 
+# ---------------------------------------------------------------------------
+# Arranque de rutas
+# ---------------------------------------------------------------------------
+# Este archivo vive en tests/ pero importa modulos de la raiz del proyecto
+# (red_cr_loader, tools, agent) y modulos hermanos de tests/ (ground_truth,
+# validar_agente). Sin esto, ni "python -m tests.X" ni "python tests/X.py"
+# resuelven ambos grupos de imports a la vez.
+import os as _os
+import sys as _sys
+from pathlib import Path as _Path
+
+_RAIZ = _Path(__file__).resolve().parent.parent
+for _ruta in (str(_RAIZ), str(_RAIZ / "tests")):
+    if _ruta not in _sys.path:
+        _sys.path.insert(0, _ruta)
+_os.chdir(_RAIZ)
+
+
 import math
 from red_cr_loader import cargar_red_cr as _cargar_red_cr_d6
 

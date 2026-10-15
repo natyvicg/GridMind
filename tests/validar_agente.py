@@ -9,11 +9,43 @@ Tres niveles de validación:
   2. Data-level: ¿lo que retornó la tool coincide con ground truth?
   3. Response-level: ¿el final_text refleja correctamente los datos?
 
+Salidas:
+  Cada corrida escribe su propio archivo y no pisa la de la otra fase:
+  la validacion de la bateria v1 (pre-mitigacion) va a
+  logs/log_validacion_v1.json y la de la v2 (post) a
+  logs/log_validacion_v2.json.
+
+Nota de corrección:
+  El chequeo de Q3 leía las claves "n_overloads_total" / "n_overloads",
+  que la herramienta nunca devolvió: el nombre real es
+  "n_overloaded_total". Al no encontrarlas caía al valor por defecto 0 y
+  el chequeo coincidía con el ground truth por casualidad, porque el
+  número de líneas sobrecargadas en los tres escenarios CR también es 0.
+  Corregido para que el chequeo lea el valor que la herramienta reporta.
+
 Tolerancias:
   - Tensiones (pu): ±0.001
   - Cargabilidades (%): ±0.1
   - Conteos / índices: match exacto
 """
+
+# ---------------------------------------------------------------------------
+# Arranque de rutas
+# ---------------------------------------------------------------------------
+# Este archivo vive en tests/ pero importa modulos de la raiz del proyecto
+# (red_cr_loader, tools, agent) y modulos hermanos de tests/ (ground_truth,
+# validar_agente). Sin esto, ni "python -m tests.X" ni "python tests/X.py"
+# resuelven ambos grupos de imports a la vez.
+import os as _os
+import sys as _sys
+from pathlib import Path as _Path
+
+_RAIZ = _Path(__file__).resolve().parent.parent
+for _ruta in (str(_RAIZ), str(_RAIZ / "tests")):
+    if _ruta not in _sys.path:
+        _sys.path.insert(0, _ruta)
+_os.chdir(_RAIZ)
+
 
 import ast
 import json
@@ -234,11 +266,19 @@ def validar_data_level(corrida, gt):
             "nota": "",
         })
 
-        # Top-5 (por orden ascendente de tensión)
-        violaciones_agente = [
-            v for v in (d.get("violations") or []) if v.get("tipo") == "subtension"
-        ]
-        violaciones_agente_sorted = sorted(violaciones_agente, key=lambda x: x["vm_pu"])[:5]
+        # Top-5 subtensiones. Se prefiere el campo dedicado top5_subtension,
+        # que la herramienta devuelve completo y sin recortar por `limit`. Si
+        # el log es anterior a ese campo, se cae al comportamiento previo:
+        # filtrar las subtensiones de la lista `violations`.
+        if d.get("top5_subtension") is not None:
+            violaciones_agente_sorted = d["top5_subtension"][:5]
+        else:
+            violaciones_agente = [
+                v for v in (d.get("violations") or []) if v.get("tipo") == "subtension"
+            ]
+            violaciones_agente_sorted = sorted(
+                violaciones_agente, key=lambda x: x["vm_pu"]
+            )[:5]
 
         for i in range(5):
             va = violaciones_agente_sorted[i] if i < len(violaciones_agente_sorted) else None
@@ -278,10 +318,10 @@ def validar_data_level(corrida, gt):
             "escenario": esc,
             "consulta": qid,
             "metrica": "get_overloaded_lines.n_overloads",
-            "valor_agente": d.get("n_overloads_total") or d.get("n_overloads") or 0,
+            "valor_agente": d.get("n_overloaded_total"),
             "valor_ground_truth": gt_q["n_overloads"],
-            "delta": diff(d.get("n_overloads_total") or d.get("n_overloads") or 0, gt_q["n_overloads"]),
-            "coincide": coincide(d.get("n_overloads_total") or d.get("n_overloads") or 0,
+            "delta": diff(d.get("n_overloaded_total"), gt_q["n_overloads"]),
+            "coincide": coincide(d.get("n_overloaded_total"),
                                  gt_q["n_overloads"], tol=0),
             "nota": "",
         })
@@ -370,6 +410,7 @@ def validar_response_level(corrida, gt):
 def main(
     log_path="logs/log_bateria_v1.json",
     out_dir="logs",
+    out_name="log_validacion_v1.json",
 ):
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -417,10 +458,13 @@ def main(
         "chequeos": todos,
     }
 
-    # JSON estructurado
-    with open(out_dir / "log_validacion.json", "w", encoding="utf-8") as f:
+    # JSON estructurado. El nombre es explicito para que la validacion
+    # pre-mitigacion y la post-mitigacion no se pisen entre si.
+    destino = out_dir / out_name
+    with open(destino, "w", encoding="utf-8") as f:
         json.dump(salida, f, indent=2, ensure_ascii=False)
 
+    print(f"Salida: {destino}")
     print(f"Total chequeos: {n_total}")
     print(f"Coinciden:      {n_ok}  ({salida['porcentaje_coincidencia']}%)")
     for nivel, st in salida["por_nivel"].items():
