@@ -843,34 +843,110 @@ def reconnect_line(line_index):
 # 7. modify_load
 # ---------------------------------------------------------------------------
 
-def modify_load(load_index, new_p_mw=None, new_q_mvar=None):
-    """Modifica P y/o Q de una carga existente."""
+def modify_load(load_index=None, bus_index=None, new_p_mw=None, new_q_mvar=None,
+                scale_factor=None):
+    """
+    Modifica P y/o Q de una carga existente.
+
+    La carga se identifica por `bus_index` (la barra donde está conectada,
+    forma preferida) o por `load_index` (índice de la tabla net.load). Si
+    se dan ambos deben corresponder a la misma carga. El cambio se expresa
+    con `scale_factor` (1.5 = +50 %, aplicado a P y a Q) o con los valores
+    finales `new_p_mw` y/o `new_q_mvar`; no se aceptan las dos formas a la
+    vez. La aritmética la hace esta función, no el modelo de lenguaje.
+    """
     net, err = _net_or_error()
     if err:
         return err
 
+    # --- Resolver qué carga se modifica ---
+    if load_index is None and bus_index is None:
+        return {"error": "Indique bus_index (barra de la carga) o load_index."}
+
+    if bus_index is not None:
+        try:
+            bus_index = int(bus_index)
+        except (TypeError, ValueError):
+            return {"error": "bus_index debe ser un entero."}
+        if bus_index not in net.bus.index:
+            return {"error": "La barra {} no existe en la red.".format(bus_index)}
+        en_barra = list(net.load.index[net.load["bus"] == bus_index])
+        if not en_barra:
+            con_carga = sorted(int(b) for b in net.load["bus"].unique())
+            msg = "La barra {} no tiene cargas conectadas.".format(bus_index)
+            if len(con_carga) <= 40:
+                msg += " Barras con carga: {}.".format(con_carga)
+            else:
+                msg += " La red tiene {} cargas en {} barras.".format(
+                    len(net.load), len(con_carga))
+            return {"error": msg}
+        if len(en_barra) > 1 and load_index is None:
+            return {
+                "error": (
+                    "La barra {} tiene {} cargas; indique load_index para "
+                    "elegir una.".format(bus_index, len(en_barra))
+                ),
+                "cargas_en_barra": [
+                    {"load_index": int(i),
+                     "p_mw": _safe_float(net.load.at[i, "p_mw"]),
+                     "q_mvar": _safe_float(net.load.at[i, "q_mvar"])}
+                    for i in en_barra
+                ],
+            }
+        if load_index is None:
+            load_index = en_barra[0]
+        elif int(load_index) not in en_barra:
+            return {
+                "error": (
+                    "La carga {} no está en la barra {} (está en la barra {}). "
+                    "Corrija la llamada.".format(
+                        load_index, bus_index,
+                        int(net.load.at[int(load_index), "bus"])
+                        if int(load_index) in net.load.index else "desconocida")
+                )
+            }
+
+    load_index = int(load_index)
     if load_index not in net.load.index:
         return {"error": "Índice de carga {} no existe en la red.".format(load_index)}
 
-    cambios = {}
-    if new_p_mw is not None:
-        cambios["p_mw_anterior"] = _safe_float(net.load.at[load_index, "p_mw"])
-        net.load.at[load_index, "p_mw"] = float(new_p_mw)
-        cambios["p_mw_nuevo"] = float(new_p_mw)
+    # --- Resolver el cambio ---
+    p_ant = _safe_float(net.load.at[load_index, "p_mw"])
+    q_ant = _safe_float(net.load.at[load_index, "q_mvar"])
 
-    if new_q_mvar is not None:
-        cambios["q_mvar_anterior"] = _safe_float(net.load.at[load_index, "q_mvar"])
-        net.load.at[load_index, "q_mvar"] = float(new_q_mvar)
-        cambios["q_mvar_nuevo"] = float(new_q_mvar)
+    if scale_factor is not None and (new_p_mw is not None or new_q_mvar is not None):
+        return {"error": "Use scale_factor o valores finales (new_p_mw, new_q_mvar), no ambos."}
 
-    if not cambios:
-        return {"error": "No se especificó ningún cambio (new_p_mw o new_q_mvar)."}
+    if scale_factor is not None:
+        try:
+            f = float(scale_factor)
+        except (TypeError, ValueError):
+            return {"error": "scale_factor debe ser numérico (1.5 = +50 %)."}
+        if f < 0:
+            return {"error": "scale_factor no puede ser negativo."}
+        p_new, q_new = round((p_ant or 0.0) * f, 6), round((q_ant or 0.0) * f, 6)
+    elif new_p_mw is not None or new_q_mvar is not None:
+        p_new = float(new_p_mw) if new_p_mw is not None else p_ant
+        q_new = float(new_q_mvar) if new_q_mvar is not None else q_ant
+    else:
+        return {"error": "No se especificó ningún cambio (scale_factor, new_p_mw o new_q_mvar)."}
 
-    cambios["load_index"] = int(load_index)
-    cambios["bus"] = int(net.load.at[load_index, "bus"])
-    cambios["status"] = "modified"
-    cambios["note"] = "Llame run_power_flow para recalcular el estado de la red."
-    return cambios
+    net.load.at[load_index, "p_mw"] = p_new
+    net.load.at[load_index, "q_mvar"] = q_new
+
+    resultado = {
+        "load_index": load_index,
+        "bus": int(net.load.at[load_index, "bus"]),
+        "p_mw_anterior": p_ant,
+        "p_mw_nuevo": _safe_float(p_new),
+        "q_mvar_anterior": q_ant,
+        "q_mvar_nuevo": _safe_float(q_new),
+        "status": "modified",
+        "note": "Llame run_power_flow para recalcular el estado de la red.",
+    }
+    if scale_factor is not None:
+        resultado["scale_factor"] = f
+    return resultado
 
 
 # ---------------------------------------------------------------------------

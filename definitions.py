@@ -274,26 +274,52 @@ BASE_DEFS = [
         "name": "modify_load",
         "description": (
             "Modifica la potencia activa (P) y/o reactiva (Q) de una carga "
-            "existente. Después de llamar esta tool, vuelva a invocar "
-            "run_power_flow."
+            "existente. FORMA PREFERIDA: identifique la carga por bus_index "
+            "(la barra donde está conectada) y exprese el cambio con "
+            "scale_factor (1.5 = +50 %, 0.8 = -20 %; se aplica a P y a Q). La "
+            "herramienta resuelve qué carga está en esa barra y hace la "
+            "aritmética; no calcule usted los valores finales. Use new_p_mw y "
+            "new_q_mvar solo cuando el usuario dé valores absolutos. El "
+            "resultado devuelve los valores anteriores y nuevos: compárelos con "
+            "lo esperado antes de continuar. Después de llamar esta tool, "
+            "vuelva a invocar run_power_flow."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
+                "bus_index": {
+                    "type": "integer",
+                    "description": (
+                        "Índice interno de la barra donde está la carga "
+                        "(0-indexed en redes IEEE: la barra IEEE 3 es el "
+                        "índice 2; código 5xxxx en la red CR)."
+                    ),
+                },
                 "load_index": {
                     "type": "integer",
-                    "description": "Índice 0-indexed de la carga en net.load.",
+                    "description": (
+                        "Índice 0-indexed de la carga en net.load. Solo si la "
+                        "barra tiene más de una carga o si el usuario lo da "
+                        "explícitamente."
+                    ),
+                },
+                "scale_factor": {
+                    "type": "number",
+                    "description": (
+                        "Factor multiplicativo sobre P y Q (1.5 = +50 %). "
+                        "Excluyente con new_p_mw y new_q_mvar."
+                    ),
                 },
                 "new_p_mw": {
                     "type": "number",
-                    "description": "Nueva potencia activa en MW. Opcional.",
+                    "description": "Nueva potencia activa en MW (valor absoluto). Opcional.",
                 },
                 "new_q_mvar": {
                     "type": "number",
-                    "description": "Nueva potencia reactiva en MVAr. Opcional.",
+                    "description": "Nueva potencia reactiva en MVAr (valor absoluto). Opcional.",
                 },
             },
-            "required": ["load_index"],
+            "required": [],
         },
     },
     {
