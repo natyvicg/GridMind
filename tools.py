@@ -46,6 +46,7 @@ from datos_cortocircuito import (
     aplicar_parametros_tipicos as _parametros_cc_tipicos,
     diagnosticar as _diagnosticar_cc,
     ENDTEMP_MIN_DEGREE as _ENDTEMP_MIN,
+    mapa_nombres_cr,
 )
 
 
@@ -226,6 +227,23 @@ def _iteraciones_nr(net):
         return None
 
 
+
+def _nombres_barras():
+    """
+    Devuelve {índice de barra: nombre de subestación} para presentación.
+    Solo aplica a las redes CR: lee la hoja 'Bus Data' del Excel con el
+    mismo mapa que usa run_short_circuit. En las redes IEEE el índice es
+    el único identificador, así que devuelve un dict vacío. No modifica
+    la red; si el Excel no está disponible devuelve un dict vacío.
+    """
+    red = _STATE.get("current_network_name") or ""
+    if not red.startswith("CR_"):
+        return {}
+    try:
+        return mapa_nombres_cr(red.split("_", 1)[1]) or {}
+    except Exception:
+        return {}
+
 def _net_or_error():
     if _STATE["net"] is None:
         return None, {
@@ -377,14 +395,22 @@ def get_voltage_violations(v_min=0.95, v_max=1.05, limit=20):
     bajas = vm[vm < v_min].sort_values()
     altas = vm[vm > v_max].sort_values(ascending=False)
 
+    # Nombres de subestación (solo presentación, redes CR): el mismo mapa
+    # del Excel que usa run_short_circuit.
+    nombres = _nombres_barras()
+
     def _fila(idx, val, tipo):
         desviacion = (v_min - val) if tipo == "subtension" else (val - v_max)
-        return {
+        fila = {
             "bus_index": int(idx) if isinstance(idx, (int, float)) else idx,
             "vm_pu": _safe_float(val),
             "tipo": tipo,
             "desviacion_pu": _safe_float(round(float(desviacion), 5)),
         }
+        nombre = nombres.get(int(idx)) if isinstance(idx, (int, float)) else None
+        if nombre:
+            fila["nombre"] = nombre
+        return fila
 
     filas_bajas = [_fila(i, v, "subtension") for i, v in bajas.items()]
     filas_altas = [_fila(i, v, "sobretension") for i, v in altas.items()]
