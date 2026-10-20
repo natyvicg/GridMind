@@ -20,9 +20,12 @@ import sys as _sys
 from pathlib import Path as _Path
 
 _RAIZ = _Path(__file__).resolve().parent.parent
+# tests/ debe quedar ANTES de la raíz: si en la raíz quedan copias viejas
+# de ground_truth.py o gt_loader.py, no deben sombrear a las de tests/.
 for _ruta in (str(_RAIZ), str(_RAIZ / "tests")):
-    if _ruta not in _sys.path:
-        _sys.path.insert(0, _ruta)
+    while _ruta in _sys.path:
+        _sys.path.remove(_ruta)
+    _sys.path.insert(0, _ruta)
 _os.chdir(_RAIZ)
 
 
