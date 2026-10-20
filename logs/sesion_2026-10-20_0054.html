@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>GridMind — 2026-10-20 00:54</title>
+    <style>
+        /* ---------------------------------------------------------------
+           Paleta "gris técnico": gris muy claro, verde petróleo como
+           acento y barra gris grafito. El acento es apagado a propósito,
+           para que lo primero que se lea en una tabla sean las cifras y
+           no el color. Los tokens están arriba: cambiar la paleta es
+           cambiar estos valores.
+           --------------------------------------------------------------- */
+        :root {
+            --fondo:         #f5f6f7;
+            --texto:         #232729;
+            --panel:         #ffffff;
+            --tarjeta:       #ffffff;
+            --borde:         #d5d9dc;
+            --borde-tabla:   #e4e7ea;
+            --borde-acento:  #b9c0c4;
+            --acento:        #2c6e6a;
+            --acento-fuerte: #1e4f4c;
+            --enfasis:       #14181a;
+            --suave:         #5d666b;
+            --barra:         #2f3437;
+            --barra-texto:   #f2f4f5;
+            --usuario:       #fafbfb;
+            --metafondo:     #fbfcfc;
+            --th:            #eceff0;
+            --th-texto:      #1e4f4c;
+            --fila-hover:    #f4f7f7;
+            --nota-fondo:    #eef4f3;
+            --nota-borde:    #2c6e6a;
+            --nota-texto:    #274f4c;
+            --codigo-fondo:  #edf0f1;
+            --codigo-texto:  #1e4f4c;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system,
+                         'Helvetica Neue', Arial, sans-serif;
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 34px 22px;
+            background: var(--fondo);
+            color: var(--texto);
+            font-size: 16.5px;
+            line-height: 1.75;
+        }
+
+        header {
+            border-bottom: 2px solid var(--acento);
+            padding-bottom: 13px;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--acento-fuerte);
+            letter-spacing: 0.3px;
+        }
+        header p {
+            color: var(--suave);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .resumen {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .stat {
+            background: var(--tarjeta);
+            border: 1px solid var(--borde);
+            border-radius: 5px;
+            padding: 12px 16px;
+        }
+        .stat .label {
+            font-size: 12.5px;
+            color: var(--suave);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat .valor {
+            font-size: 23px;
+            font-weight: 600;
+            color: var(--acento-fuerte);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .glosario {
+            font-size: 13.5px;
+            color: var(--suave);
+            border-left: 3px solid var(--borde-acento);
+            padding: 7px 13px;
+            margin-bottom: 26px;
+            line-height: 1.6;
+        }
+        .glosario strong {
+            color: var(--acento-fuerte);
+            font-weight: 600;
+        }
+
+        .consulta {
+            background: var(--panel);
+            border: 1px solid var(--borde);
+            border-radius: 6px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .q-header {
+            background: var(--barra);
+            color: var(--barra-texto);
+            padding: 10px 18px;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .q-header .hora {
+            float: right;
+            font-weight: 400;
+            opacity: 0.75;
+        }
+        .usuario {
+            padding: 14px 18px;
+            font-size: 16.5px;
+            background: var(--usuario);
+            border-bottom: 1px solid var(--borde);
+            font-style: italic;
+            color: var(--suave);
+        }
+        .meta {
+            padding: 8px 18px;
+            font-size: 13px;
+            color: var(--suave);
+            background: var(--metafondo);
+            border-bottom: 1px solid var(--borde);
+            font-variant-numeric: tabular-nums;
+        }
+        .meta strong { color: var(--acento-fuerte); }
+
+        .respuesta { padding: 18px; }
+        .respuesta h2 {
+            font-size: 21px;
+            color: var(--acento-fuerte);
+            margin: 16px 0 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--borde);
+        }
+        .respuesta h3 {
+            font-size: 19px;
+            color: var(--acento-fuerte);
+            margin: 14px 0 6px;
+        }
+        .respuesta h4 {
+            font-size: 17px;
+            color: var(--acento);
+            margin: 14px 0 6px;
+        }
+        .respuesta h5 {
+            font-size: 15.5px;
+            color: var(--acento);
+            margin: 12px 0 4px;
+            font-weight: 600;
+        }
+        .respuesta p { margin: 8px 0; }
+        .respuesta .item {
+            padding-left: 17px;
+            position: relative;
+        }
+        .respuesta .item::before {
+            content: "—";
+            position: absolute;
+            left: 0;
+            color: var(--borde-acento);
+        }
+        .respuesta em { color: var(--suave); }
+
+        code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.92em;
+            background: var(--codigo-fondo);
+            color: var(--codigo-texto);
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+
+        /* Contenedor con desplazamiento propio: con la tipografía más
+           grande, una tabla de seis columnas puede no caber, y es preferible
+           que se desplace ella sola antes que toda la página. */
+        .tabla {
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 15px;
+            /* Cifras de ancho fijo: las columnas numéricas quedan alineadas. */
+            font-variant-numeric: tabular-nums;
+        }
+        th {
+            background: var(--th);
+            color: var(--th-texto);
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+            border-bottom: 1px solid var(--borde);
+        }
+        td {
+            padding: 9px 14px;
+            border-bottom: 1px solid var(--borde-tabla);
+        }
+        tr:hover td { background: var(--fila-hover); }
+
+        .nota {
+            background: var(--nota-fondo);
+            border-left: 4px solid var(--nota-borde);
+            padding: 11px 15px;
+            margin: 13px 0;
+            font-size: 15px;
+            color: var(--nota-texto);
+            line-height: 1.65;
+        }
+
+        strong {
+            font-weight: 600;
+            color: var(--enfasis);
+        }
+
+        /* ---------------------------------------------------------------
+           Impresión: el reporte de sesión es evidencia del TFG y puede
+           terminar impreso o adjunto a un documento.
+           --------------------------------------------------------------- */
+        @media print {
+            body {
+                background: #ffffff;
+                max-width: 100%;
+                padding: 0;
+                font-size: 10.5pt;
+                line-height: 1.5;
+            }
+            .consulta {
+                break-inside: avoid;
+                page-break-inside: avoid;
+                margin-bottom: 14px;
+            }
+            .tabla { overflow-x: visible; }
+            table { font-size: 9.5pt; }
+            th, td { padding: 5px 8px; }
+            .q-header, .stat, .nota, th {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .glosario { font-size: 9pt; }
+            .meta { font-size: 8.5pt; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>GridMind</h1>
+        <p>Sesion del 20/10/2026 a las 00:54 · Duracion: 15min 55s</p>
+    </header>
+
+    <div class="resumen">
+        <div class="stat"><div class="label">Consultas</div><div class="valor">21</div></div>
+        <div class="stat"><div class="label">Iteraciones agente</div><div class="valor">63</div></div>
+        <div class="stat"><div class="label">Iteraciones NR</div><div class="valor">3-5</div></div>
+        <div class="stat"><div class="label">Tokens</div><div class="valor">584,195</div></div>
+        <div class="stat"><div class="label">Cómputo</div><div class="valor">433.4 s</div></div>
+        <div class="stat"><div class="label">Costo</div><div class="valor">$1.9537</div></div>
+    </div>
+
+    <p class="glosario"><strong>Iteraciones del agente:</strong> ciclos de razonamiento del modelo
+    (consulta a la API, ejecución de herramienta, retorno del resultado). <strong>Iteraciones NR:</strong>
+    iteraciones que le tomó converger al método de Newton-Raphson en PandaPower. Son procesos
+    distintos: el primero mide el razonamiento, el segundo el esfuerzo numérico del solver.
+    <strong>Cómputo:</strong> tiempo efectivo que el sistema tardó en producir las respuestas,
+    20.6 s por consulta en promedio; la duración del encabezado incluye además el tiempo
+    entre consultas.</p>
+
+    
+            <section class="consulta">
+                <div class="q-header">Consulta 1<span class="hora">00:56:41</span></div>
+                <div class="usuario">Cargá IEEE_14 y dame el resumen del flujo de potencia y las violaciones de tensión con los umbrales estándar.</div>
+                <p class="meta"><strong>Herramientas:</strong> run_power_flow, get_voltage_violations · 3 iteraciones del agente · 3 iteraciones Newton-Raphson · 20.0 s · 20,896 tokens · $0.0752</p>
+                <div class="respuesta">
+                    <p>Aquí está el análisis completo de la red IEEE_14.</p>
+<h3>Resumen del Flujo de Potencia — IEEE_14</h3>
+<div class="tabla"><table>
+<tr><th>Parámetro</th><th>Valor</th></tr>
+<tr><td>Convergencia</td><td>Sí</td></tr>
+<tr><td>Iteraciones Newton-Raphson</td><td>3</td></tr>
+<tr><td>Número de barras</td><td>14</td></tr>
+<tr><td>Número de líneas</td><td>15</td></tr>
+<tr><td>Número de transformadores</td><td>5</td></tr>
+<tr><td>Tensión mínima observada</td><td>1.0100 pu</td></tr>
+<tr><td>Tensión máxima observada</td><td>1.0900 pu</td></tr>
+<tr><td>Carga máxima de líneas</td><td>1.51 %</td></tr>
+<tr><td>Carga máxima de transformadores</td><td>0.45 %</td></tr>
+</table></div>
+<p>El flujo convergió en <strong>3 iteraciones</strong>, lo que indica un buen condicionamiento de la red. Las cargas de líneas y transformadores son muy bajas, sin sobrecargas.</p>
+<h3>Violaciones de Tensión — Umbrales estándar [0.95 – 1.05] pu</h3>
+<div class="tabla"><table>
+<tr><th>Tipo</th><th>Cantidad</th></tr>
+<tr><td>Subtensiones (< 0.95 pu)</td><td>0</td></tr>
+<tr><td>Sobretensiones (> 1.05 pu)</td><td><strong>9</strong></td></tr>
+<tr><td><strong>Total</strong></td><td><strong>9</strong></td></tr>
+</table></div>
+<p>Se detectaron <strong>9 sobretensiones</strong> y ninguna subtensión. La tabla siguiente muestra todas las barras violadas, ordenadas por severidad (desviación absoluta respecto al umbral de 1.05 pu):</p>
+<div class="tabla"><table>
+<tr><th>Rank</th><th>Índice interno</th><th>Barra IEEE</th><th>Tensión (pu)</th><th>Desviación (pu)</th><th>Tipo</th></tr>
+<tr><td>1</td><td>7</td><td>8</td><td>1.0900</td><td>+0.0400</td><td>Sobretensión</td></tr>
+<tr><td>2</td><td>5</td><td>6</td><td>1.0700</td><td>+0.0200</td><td>Sobretensión</td></tr>
+<tr><td>3</td><td>6</td><td>7</td><td>1.0615</td><td>+0.0115</td><td>Sobretensión</td></tr>
+<tr><td>4</td><td>0</td><td>1</td><td>1.0600</td><td>+0.0100</td><td>Sobretensión</td></tr>
+<tr><td>5</td><td>10</td><td>11</td><td>1.0569</td><td>+0.0069</td><td>Sobretensión</td></tr>
+<tr><td>6</td><td>8</td><td>9</td><td>1.0559</td><td>+0.0059</td><td>Sobretensión</td></tr>
+<tr><td>7</td><td>11</td><td>12</td><td>1.0552</td><td>+0.0052</td><td>Sobretensión</td></tr>
+<tr><td>8</td><td>9</td><td>10</td><td>1.0510</td><td>+0.0010</td><td>Sobretensión</td></tr>
+<tr><td>9</td><td>12</td><td>13</td><td>1.0504</td><td>+0.0004</td><td>Sobretensión</td></tr>
+</table></div>
+<p><strong>Observaciones:</strong></p>
+<p class="item">La barra más severa es la <strong>barra IEEE 8</strong> (índice interno 7), con 1.0900 pu, una desviación de <strong>0.0400 pu</strong> por encima del límite superior.</p>
+<p class="item">La barra <strong>IEEE 6</strong> (índice 5) es la segunda más severa con 1.0700 pu.</p>
+<p class="item">Las barras <strong>IEEE 10 y 13</strong> apenas superan el umbral (desviaciones de 0.0010 y 0.0004 pu respectivamente).</p>
+<p class="item">No se registran subtensiones: el perfil de tensión mínimo observado es 1.0100 pu, bien por encima del límite inferior de 0.95 pu.</p>
+<p class="item">Las sobrecargas de líneas y transformadores son nulas en este escenario base.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 2<span class="hora">00:57:18</span></div>
+                <div class="usuario">Desconectá la línea entre las barras 1 y 2 de IEEE_14, volvé a correr el flujo y decime qué cambió: barras fuera de rango y elementos sobrecargados. Luego reconectala.</div>
+                <p class="meta"><strong>Herramientas:</strong> disconnect_line, run_power_flow, get_voltage_violations, get_overloaded_lines, reconnect_line, run_power_flow · 6 iteraciones del agente · 3 iteraciones Newton-Raphson · 29.1 s · 47,052 tokens · $0.1572</p>
+                <div class="respuesta">
+                    <p>La red quedó restaurada a su estado original. A continuación el análisis comparativo completo.</p>
+<h3>Análisis de Contingencia — Desconexión de L1-2 (IEEE_14)</h3>
+<h4>1. Resumen del flujo de potencia</h4>
+<div class="tabla"><table>
+<tr><th>Parámetro</th><th>Base (L1-2 en servicio)</th><th>Contingencia (L1-2 fuera)</th><th>Cambio</th></tr>
+<tr><td>Convergencia</td><td>Sí</td><td>Sí</td><td>—</td></tr>
+<tr><td>Iteraciones N-R</td><td>3</td><td>4</td><td>+1</td></tr>
+<tr><td>Tensión mínima (pu)</td><td>1.0100</td><td>0.9935</td><td>−0.0165</td></tr>
+<tr><td>Tensión máxima (pu)</td><td>1.0900</td><td>1.0900</td><td>0</td></tr>
+<tr><td>Carga máx. líneas (%)</td><td>1.51</td><td>2.51</td><td>+1.00</td></tr>
+<tr><td>Carga máx. trafos (%)</td><td>0.45</td><td>0.51</td><td>+0.06</td></tr>
+</table></div>
+<p>La red siguió convergiendo, aunque requirió una iteración adicional, lo que refleja el mayor esfuerzo numérico ante la topología reducida.</p>
+<h4>2. Violaciones de tensión</h4>
+<div class="tabla"><table>
+<tr><th>Estado</th><th>Subtensiones</th><th>Sobretensiones</th><th>Total</th></tr>
+<tr><td>Base</td><td>0</td><td>9</td><td>9</td></tr>
+<tr><td>Contingencia</td><td>0</td><td><strong>6</strong></td><td><strong>6</strong></td></tr>
+</table></div>
+<p>Llamativamente, la contingencia <strong>redujo</strong> el número de sobretensiones de 9 a 6. Esto se debe a que la barra 1 (slack, índice 0) pasó de estar fuera del rango (1.06 pu en base) a seguir en 1.06 pu, pero otras barras que antes superaban 1.05 pu se regularon al redistribuirse los flujos. Las 6 sobretensiones remanentes, ordenadas por severidad:</p>
+<div class="tabla"><table>
+<tr><th>Rank</th><th>Índice interno</th><th>Barra IEEE</th><th>Tensión (pu)</th><th>Desviación (pu)</th><th>Tipo</th></tr>
+<tr><td>1</td><td>7</td><td>8</td><td>1.0900</td><td>+0.0400</td><td>Sobretensión</td></tr>
+<tr><td>2</td><td>5</td><td>6</td><td>1.0700</td><td>+0.0200</td><td>Sobretensión</td></tr>
+<tr><td>3</td><td>0</td><td>1</td><td>1.0600</td><td>+0.0100</td><td>Sobretensión</td></tr>
+<tr><td>4</td><td>11</td><td>12</td><td>1.0546</td><td>+0.0046</td><td>Sobretensión</td></tr>
+<tr><td>5</td><td>6</td><td>7</td><td>1.0535</td><td>+0.0035</td><td>Sobretensión</td></tr>
+<tr><td>6</td><td>10</td><td>11</td><td>1.0528</td><td>+0.0028</td><td>Sobretensión</td></tr>
+</table></div>
+<p>No se registraron subtensiones en ninguno de los dos estados.</p>
+<h4>3. Sobrecargas en líneas y transformadores</h4>
+<p><strong>No se detectó ningún elemento sobrecargado</strong> (umbral 100 %) en la contingencia. Las cargas máximas se mantuvieron muy por debajo del límite térmico (2.51 % en líneas, 0.51 % en transformadores), lo que indica que la red IEEE_14 tiene amplia capacidad de reserva ante esta contingencia.</p>
+<h4>4. Conclusión</h4>
+<p>La desconexión de L1-2 es una contingencia <strong>N-1 segura</strong> para esta red: el flujo converge, no hay sobrecargas y no se generan nuevas subtensiones. El único efecto apreciable es una leve caída de la tensión mínima (de 1.0100 a 0.9935 pu, aún dentro del rango operacional) y un incremento marginal en la carga de los elementos restantes. La red fue restaurada exitosamente a su estado base.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 3<span class="hora">00:58:02</span></div>
+                <div class="usuario">Aumentá en 50 % la carga de la barra 3 de IEEE_14 y decime cómo cambian la tensión mínima y la cargabilidad máxima respecto al caso base.</div>
+                <p class="meta"><strong>Herramientas:</strong> run_power_flow, modify_load, run_power_flow, get_voltage_violations, get_overloaded_lines · 5 iteraciones del agente · 3 iteraciones Newton-Raphson · 28.2 s · 41,308 tokens · $0.1371</p>
+                <div class="respuesta">
+                    <p>Resultados completos. A continuación el análisis comparativo:</p>
+<h3>Modificación de carga — Barra 3 IEEE_14 (+50 %)</h3>
+<h4>Cambio aplicado</h4>
+<div class="tabla"><table>
+<tr><th>Parámetro</th><th>Antes</th><th>Después</th></tr>
+<tr><td>P (MW)</td><td>94.20</td><td>141.30</td></tr>
+<tr><td>Q (MVAr)</td><td>19.00</td><td>28.50</td></tr>
+</table></div>
+<h4>Comparación de indicadores globales</h4>
+<div class="tabla"><table>
+<tr><th>Indicador</th><th>Caso base</th><th>+50 % carga B3</th><th>Cambio</th></tr>
+<tr><td>Convergencia</td><td>Sí</td><td>Sí</td><td>—</td></tr>
+<tr><td>Iteraciones N-R</td><td>3</td><td>3</td><td>0</td></tr>
+<tr><td>Tensión mínima (pu)</td><td>1.0100</td><td>1.0100</td><td><strong>0.0000</strong></td></tr>
+<tr><td>Tensión máxima (pu)</td><td>1.0900</td><td>1.0900</td><td>0.0000</td></tr>
+<tr><td>Carga máx. líneas (%)</td><td>1.51</td><td><strong>1.91</strong></td><td><strong>+0.40</strong></td></tr>
+<tr><td>Carga máx. trafos (%)</td><td>0.45</td><td>0.46</td><td>+0.01</td></tr>
+</table></div>
+<h4>Violaciones de tensión</h4>
+<div class="tabla"><table>
+<tr><th>Estado</th><th>Subtensiones</th><th>Sobretensiones</th><th>Total</th></tr>
+<tr><td>Caso base</td><td>0</td><td>9</td><td>9</td></tr>
+<tr><td>+50 % carga B3</td><td>0</td><td>9</td><td><strong>9</strong></td></tr>
+</table></div>
+<p>El número y tipo de violaciones no cambia. Las 9 sobretensiones preexistentes se mantienen con prácticamente la misma severidad.</p>
+<h4>Sobrecargas de líneas y transformadores</h4>
+<p>No hay elementos sobrecargados en ninguno de los dos escenarios (0 líneas, 0 transformadores).</p>
+<h4>Interpretación</h4>
+<p>El aumento del 50 % en la carga de la barra 3 (+47.1 MW / +9.5 MVAr) tiene un <strong>impacto muy moderado</strong> en esta red:</p>
+<p class="item">La <strong>tensión mínima no varía</strong> (1.0100 pu en ambos casos), lo que indica que la barra 3 está bien respaldada por la generación local y la topología de la red.</p>
+<p class="item">La <strong>cargabilidad máxima de líneas sube de 1.51 % a 1.91 %</strong> (+0.40 pp), un incremento proporcional pero que se mantiene muy lejos de cualquier límite de sobrecarga.</p>
+<p class="item">La red <strong>no desarrolla nuevas violaciones de tensión ni sobrecargas</strong>, lo que refleja la robustez de la IEEE_14 ante este nivel de perturbación de demanda.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 4<span class="hora">00:58:38</span></div>
+                <div class="usuario">Cargá IEEE_118 y listá los 10 elementos más cargados.</div>
+                <p class="meta"><strong>Herramientas:</strong> run_power_flow, get_overloaded_lines · 3 iteraciones del agente · 3 iteraciones Newton-Raphson · 21.1 s · 26,474 tokens · $0.0912</p>
+                <div class="respuesta">
+                    <p>La red IEEE_118 cargó y convergió correctamente. A continuación el análisis completo.</p>
+<h3>Flujo de Potencia — IEEE_118</h3>
+<div class="tabla"><table>
+<tr><th>Parámetro</th><th>Valor</th></tr>
+<tr><td>Convergencia</td><td>Sí</td></tr>
+<tr><td>Iteraciones Newton-Raphson</td><td>3</td></tr>
+<tr><td>Número de barras</td><td>118</td></tr>
+<tr><td>Número de líneas</td><td>173</td></tr>
+<tr><td>Número de transformadores</td><td>13</td></tr>
+<tr><td>Tensión mínima observada</td><td>0.9430 pu</td></tr>
+<tr><td>Tensión máxima observada</td><td>1.0500 pu</td></tr>
+<tr><td>Carga máxima de líneas</td><td>4.48 %</td></tr>
+<tr><td>Carga máxima de transformadores</td><td>3.59 %</td></tr>
+</table></div>
+<p>El flujo convergió en <strong>3 iteraciones</strong>. Ningún elemento supera el 100 % de cargabilidad.</p>
+<h3>Top 10 elementos más cargados — IEEE_118</h3>
+<p>La tabla combina líneas y transformadores, ordenados de mayor a menor cargabilidad tal como los devuelve la herramienta:</p>
+<div class="tabla"><table>
+<tr><th>Rank</th><th>Tipo</th><th>Índice interno</th><th>De barra (IEEE)</th><th>A barra (IEEE)</th><th>Cargabilidad (%)</th></tr>
+<tr><td>1</td><td>Línea</td><td>6</td><td>7</td><td>8</td><td>4.48</td></tr>
+<tr><td>2</td><td>Línea</td><td>7</td><td>8</td><td>9</td><td>4.36</td></tr>
+<tr><td>3</td><td>Transformador</td><td>0</td><td>7 (HV)</td><td>4 (LV)</td><td>3.59</td></tr>
+<tr><td>4</td><td>Transformador</td><td>12</td><td>115 (HV)</td><td>67 (LV)</td><td>2.83</td></tr>
+<tr><td>5</td><td>Transformador</td><td>3</td><td>37 (HV)</td><td>36 (LV)</td><td>2.82</td></tr>
+<tr><td>6</td><td>Línea</td><td>34</td><td>25</td><td>29</td><td>2.28</td></tr>
+<tr><td>7</td><td>Transformador</td><td>2</td><td>29 (HV)</td><td>16 (LV)</td><td>2.55</td></tr>
+<tr><td>8</td><td>Línea</td><td>128</td><td>88</td><td>91</td><td>2.03</td></tr>
+<tr><td>9</td><td>Línea</td><td>89</td><td>37</td><td>64</td><td>2.00</td></tr>
+<tr><td>10</td><td>Línea</td><td>90</td><td>63</td><td>64</td><td>2.00</td></tr>
+</table></div>
+<div class="nota"><strong>Nota:</strong> La herramienta devuelve líneas y transformadores en listas separadas. Para construir el ranking combinado de 10 filas se intercalaron ambas listas por cargabilidad descendente. Los índices de barra corresponden a la numeración interna de PandaPower (base 0); en IEEE_118 la convención es 0-indexed, por lo que la barra interna 7 equivale a la barra IEEE 8, etc.</div>
+<h4>Observación general</h4>
+<p>En condiciones normales, <strong>ningún elemento de la red IEEE_118 está sobrecargado</strong>: la cargabilidad máxima es de apenas <strong>4.48 %</strong> (línea 7→8). La red opera con amplios márgenes de capacidad en todos sus elementos serie.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 5<span class="hora">00:58:59</span></div>
+                <div class="usuario">Calculá el cortocircuito trifásico en IEEE_14.</div>
+                <p class="meta"><strong>Herramientas:</strong> run_power_flow, run_short_circuit · 3 iteraciones del agente · 3 iteraciones Newton-Raphson · 15.5 s · 27,293 tokens · $0.0901</p>
+                <div class="respuesta">
+                    <p>El cálculo no es posible con la red IEEE_14, y ese es el comportamiento correcto y esperado. A continuación la explicación técnica:</p>
+<h3>Cortocircuito trifásico — IEEE_14: No disponible</h3>
+<h4>Motivo</h4>
+<p>La red IEEE_14 fue publicada originalmente como un <strong>benchmark de flujo de carga</strong>, no como un modelo de operación real. Por ello, <strong>no contiene los parámetros que exige la norma IEC 60909</strong> para el cálculo de corrientes de cortocircuito. Los datos faltantes son:</p>
+<div class="tabla"><table>
+<tr><th>Parámetro faltante</th><th>Detalle</th></tr>
+<tr><td>Potencia de cortocircuito de red externa (<code>s_sc_max_mva</code>)</td><td>1 alimentador externo sin dato</td></tr>
+<tr><td>Reactancia subtransitoria de generadores (<code>xdss_pu</code>)</td><td>4 máquinas sin dato</td></tr>
+<tr><td>Potencia base de máquina (<code>sn_mva</code>)</td><td>4 de 4 máquinas sin valor</td></tr>
+<tr><td>Tensión nominal de máquina (<code>vn_kv</code>)</td><td>4 máquinas sin dato</td></tr>
+<tr><td>Factor de potencia nominal (<code>cos_phi</code>)</td><td>4 máquinas sin dato</td></tr>
+</table></div>
+<p>Estos parámetros son indispensables para IEC 60909: sin ellos no es posible construir la impedancia equivalente de las fuentes ni calcular la corriente inicial simétrica Ik''.</p>
+<h4>Alternativas disponibles</h4>
+<p>1. <strong>Redes de Costa Rica (CR_Min, CR_Med, CR_Max):</strong> son modelos de operación real con 108 máquinas completamente parametrizadas. Son la opción recomendada para un cálculo IEC 60909 con datos reales.</p>
+<p>2. <strong>Cálculo indicativo con parámetros típicos de literatura:</strong> si lo desea de forma explícita, puedo correr el cálculo sobre IEEE_14 usando supuestos estándar de literatura. El resultado quedará rotulado como indicativo y no representativo del modelo real. ¿Le interesa esta opción?</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 6<span class="hora">00:59:12</span></div>
+                <div class="usuario">Hacé lo mismo.</div>
+                <p class="meta"><strong>Sin herramientas</strong> (respondida desde el contexto de la sesión) · 1 iteración del agente · 6.3 s · 8,613 tokens · $0.0280</p>
+                <div class="respuesta">
+                    <p>Antes de proceder, necesito confirmar qué análisis querés repetir. En esta sesión se realizaron varias operaciones sobre IEEE_14:</p>
+<p>1. <strong>Contingencia de línea L1-2</strong> — desconexión, flujo, análisis de violaciones y sobrecargas, y reconexión.</p>
+<p>2. <strong>Modificación de carga en barra 3</strong> (+50 %) — comparación de tensión mínima y cargabilidad máxima respecto al caso base.</p>
+<p>3. <strong>Cortocircuito trifásico IEC 60909</strong> — que resultó no disponible por falta de parámetros en la red IEEE_14.</p>
+<p>¿A cuál de los tres te referís con "lo mismo"?</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 7<span class="hora">01:00:03</span></div>
+                <div class="usuario">Cargá la red CR_Max y dame el resumen del flujo de potencia: tensión mínima y máxima en pu, cuántas barras tiene y cuántas tienen resultado, iteraciones de Newton-Raphson y la cargabilidad máxima de líneas y de transformadores.</div>
+                <p class="meta"><strong>Herramientas:</strong> run_power_flow · 2 iteraciones del agente · 5 iteraciones Newton-Raphson · 33.3 s · 13,298 tokens · $0.0473</p>
+                <div class="respuesta">
+                    <p>Aquí está el resumen completo del flujo de potencia para la red <strong>CR_Max</strong>:</p>
+<h4>Resumen del Flujo de Potencia — CR_Max</h4>
+<div class="tabla"><table>
+<tr><th>Parámetro</th><th>Valor</th></tr>
+<tr><td><strong>Convergencia</strong></td><td>Sí</td></tr>
+<tr><td><strong>Iteraciones Newton-Raphson</strong></td><td>5</td></tr>
+<tr><td><strong>Barras totales</strong></td><td>524</td></tr>
+<tr><td><strong>Barras con resultado</strong></td><td>513</td></tr>
+<tr><td><strong>Barras sin resultado</strong></td><td>11</td></tr>
+</table></div>
+<h4>Perfil de Tensión</h4>
+<div class="tabla"><table>
+<tr><th>Indicador</th><th>Valor (pu)</th></tr>
+<tr><td><strong>Tensión mínima</strong></td><td>0.7521 pu</td></tr>
+<tr><td><strong>Tensión máxima</strong></td><td>1.2473 pu</td></tr>
+</table></div>
+<h4>Cargabilidad Máxima</h4>
+<div class="tabla"><table>
+<tr><th>Tipo de elemento</th><th>Cargabilidad máxima</th></tr>
+<tr><td><strong>Líneas</strong> (137 en total)</td><td>59.20 %</td></tr>
+<tr><td><strong>Transformadores</strong> (256 en total)</td><td>88.72 %</td></tr>
+</table></div>
+<h4>Observaciones técnicas</h4>
+<p class="item"><strong>Convergencia:</strong> El flujo convergió en <strong>5 iteraciones</strong> de Newton-Raphson, lo que indica un buen condicionamiento numérico de la red.</p>
+<p class="item"><strong>Barras sin resultado (11):</strong> Corresponden a 3 unidades generadoras no despachadas y 8 devanados terciarios desactivados. Es un comportamiento esperado del modelo operativo de Costa Rica; no representan un problema numérico.</p>
+<p class="item"><strong>Perfil de tensión:</strong> El rango observado (0.7521 – 1.2473 pu) excede ampliamente los límites operacionales estándar (0.95 – 1.05 pu). Esto es una característica conocida del modelo CR: la red opera con perfiles de tensión que violan el rango estándar, lo cual es esperable dado el diseño del modelo. Las violaciones son reales y numerosas.</p>
+<p class="item"><strong>Cargabilidad:</strong> Ninguna línea ni transformador supera el 100 % en el estado base; el elemento más cargado es un transformador al <strong>88.72 %</strong>, lo que deja un margen reducido ante contingencias.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 8<span class="hora">01:00:28</span></div>
+                <div class="usuario">¿Cuántas barras tienen subtensión (menos de 0,95 pu)? Listá las 5 peores con su índice, nombre y tensión.</div>
+                <p class="meta"><strong>Herramientas:</strong> get_voltage_violations · 2 iteraciones del agente · 15.1 s · 15,329 tokens · $0.0526</p>
+                <div class="respuesta">
+                    <h4>Violaciones de subtensión — CR_Max (umbral: 0.95 pu)</h4>
+<p><strong>Total de barras con subtensión: 29</strong></p>
+<p>A continuación, las <strong>5 peores</strong> ordenadas por desviación absoluta respecto al umbral:</p>
+<div class="tabla"><table>
+<tr><th>Ranking</th><th>Índice de barra</th><th>Nombre</th><th>Tensión (pu)</th><th>Desviación (pu)</th></tr>
+<tr><td>1</td><td>50280</td><td>MIRT3T</td><td>0.7521</td><td>−0.1979</td></tr>
+<tr><td>2</td><td>50830</td><td>PBLT1T</td><td>0.8640</td><td>−0.0860</td></tr>
+<tr><td>3</td><td>54080</td><td>TERT1T</td><td>0.8925</td><td>−0.0575</td></tr>
+<tr><td>4</td><td>50831</td><td>PBLT2T</td><td>0.8974</td><td>−0.0526</td></tr>
+<tr><td>5</td><td>53080</td><td>LINT1T</td><td>0.9037</td><td>−0.0463</td></tr>
+</table></div>
+<h4>Observaciones</h4>
+<p class="item"><strong>MIRT3T</strong> (índice 50280) es con diferencia la barra más crítica: opera a <strong>0.7521 pu</strong>, con una desviación de <strong>0.1979 pu</strong> (19.79 %) por debajo del umbral de 0.95 pu.</p>
+<p class="item">Las barras <strong>PBLT1T</strong> y <strong>PBLT2T</strong> (índices 50830 y 50831) corresponden a la misma subestación y ambas presentan subtensión severa, lo que sugiere un problema localizado en ese nodo.</p>
+<p class="item">En total, la red CR_Max presenta <strong>40 violaciones de tensión</strong>: 29 subtensiones y 11 sobretensiones. Este comportamiento es característico del modelo operativo de Costa Rica, donde el perfil de tensión observado excede ampliamente el rango estándar 0.95–1.05 pu.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 9<span class="hora">01:00:53</span></div>
+                <div class="usuario">¿Cuántas barras tienen sobretensión (más de 1,05 pu)? Listá las 5 peores con su índice, nombre y tensión.</div>
+                <p class="meta"><strong>Herramientas:</strong> get_voltage_violations · 2 iteraciones del agente · 14.3 s · 17,424 tokens · $0.0593</p>
+                <div class="respuesta">
+                    <h4>Violaciones de sobretensión — CR_Max (umbral: 1.05 pu)</h4>
+<p><strong>Total de barras con sobretensión: 11</strong></p>
+<p>A continuación, las <strong>5 peores</strong> ordenadas por desviación absoluta respecto al umbral:</p>
+<div class="tabla"><table>
+<tr><th>Ranking</th><th>Índice de barra</th><th>Nombre</th><th>Tensión (pu)</th><th>Desviación (pu)</th></tr>
+<tr><td>1</td><td>51132</td><td>OROT2T</td><td>1.2474</td><td>+0.1974</td></tr>
+<tr><td>2</td><td>53630</td><td>HERT1T</td><td>1.2255</td><td>+0.1755</td></tr>
+<tr><td>3</td><td>51134</td><td>OROT3T</td><td>1.1941</td><td>+0.1441</td></tr>
+<tr><td>4</td><td>58335</td><td>MOIT3T</td><td>1.1835</td><td>+0.1335</td></tr>
+<tr><td>5</td><td>53332</td><td>COCT3T</td><td>1.1681</td><td>+0.1181</td></tr>
+</table></div>
+<h4>Observaciones</h4>
+<p class="item"><strong>OROT2T</strong> (índice 51132) es la barra con mayor sobretensión: opera a <strong>1.2474 pu</strong>, con una desviación de <strong>0.1974 pu</strong> (19.74 %) por encima del umbral de 1.05 pu. Nótese que su desviación es prácticamente idéntica a la de la peor subtensión (MIRT3T, −0.1979 pu), lo que refleja un perfil de tensión muy disperso en ambos extremos.</p>
+<p class="item"><strong>OROT3T</strong> (índice 51134) comparte subestación con OROT2T, indicando un problema de tensión concentrado en ese nodo.</p>
+<p class="item">En total, la red CR_Max acumula <strong>40 violaciones</strong>: 29 subtensiones y 11 sobretensiones, lo cual es consistente con el comportamiento operativo conocido de este modelo.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 10<span class="hora">01:01:36</span></div>
+                <div class="usuario">Listá las 5 líneas y los 5 transformadores con mayor cargabilidad, con su porcentaje.</div>
+                <p class="meta"><strong>Herramientas:</strong> run_power_flow, get_overloaded_lines · 3 iteraciones del agente · 5 iteraciones Newton-Raphson · 25.8 s · 30,184 tokens · $0.1001</p>
+                <div class="respuesta">
+                    <p>Aquí están los resultados para la red <strong>CR_Max</strong>:</p>
+<h4>Top 5 Líneas con Mayor Cargabilidad</h4>
+<div class="tabla"><table>
+<tr><th>Ranking</th><th>Índice línea</th><th>Bus origen</th><th>Bus destino</th><th>Cargabilidad (%)</th></tr>
+<tr><td>1</td><td>39</td><td>50612</td><td>50614</td><td>59.20 %</td></tr>
+<tr><td>2</td><td>21</td><td>50160</td><td>50164</td><td>42.71 %</td></tr>
+<tr><td>3</td><td>15</td><td>50102</td><td>50103</td><td>42.38 %</td></tr>
+<tr><td>4</td><td>6</td><td>50002</td><td>51150</td><td>41.98 %</td></tr>
+<tr><td>5</td><td>35</td><td>50504</td><td>50604</td><td>41.81 %</td></tr>
+</table></div>
+<h4>Top 5 Transformadores con Mayor Cargabilidad</h4>
+<div class="tabla"><table>
+<tr><th>Ranking</th><th>Índice trafo</th><th>Tipo</th><th>Bus AT</th><th>Bus BT (/ MT)</th><th>Cargabilidad (%)</th></tr>
+<tr><td>1</td><td>12</td><td>trafo_2w</td><td>50253</td><td>50272</td><td>88.72 %</td></tr>
+<tr><td>2</td><td>92</td><td>trafo_2w</td><td>58212</td><td>58237</td><td>84.15 %</td></tr>
+<tr><td>3</td><td>6</td><td>trafo_2w</td><td>50103</td><td>50123</td><td>82.48 %</td></tr>
+<tr><td>4</td><td>56</td><td>trafo_2w</td><td>51350</td><td>51358</td><td>81.13 %</td></tr>
+<tr><td>5</td><td>52</td><td>trafo_2w</td><td>51160</td><td>51170</td><td>79.87 %</td></tr>
+</table></div>
+<h4>Observaciones</h4>
+<p class="item"><strong>Ninguna línea ni transformador supera el 100 %</strong> de cargabilidad en el escenario CR_Max: la red opera sin sobrecargas en condición base.</p>
+<p class="item">La línea más cargada (índice 39, entre barras 50612 y 50614) alcanza el <strong>59.20 %</strong>, con margen operativo holgado.</p>
+<p class="item">El transformador más cargado (índice 12, entre barras 50253 y 50272) llega al <strong>88.72 %</strong>, que si bien no constituye sobrecarga, representa el elemento con menor margen de la red y merece atención ante incrementos de demanda o contingencias.</p>
+<p class="item">Los 5 transformadores más cargados son todos de <strong>dos devanados (trafo_2w)</strong>, con cargabilidades entre 79.87 % y 88.72 %.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 11<span class="hora">01:02:09</span></div>
+                <div class="usuario">Desconectá la línea con mayor cargabilidad, volvé a correr el flujo y decime cuántas barras quedan fuera del rango 0,95 a 1,05 pu, cuál es ahora la cargabilidad máxima y si apareció alguna sobrecarga. Al final reconectá la línea.</div>
+                <p class="meta"><strong>Herramientas:</strong> disconnect_line, run_power_flow, get_voltage_violations, get_overloaded_lines, reconnect_line, run_power_flow · 6 iteraciones del agente · 5 iteraciones Newton-Raphson · 26.9 s · 64,855 tokens · $0.2075</p>
+                <div class="respuesta">
+                    <p>La red ha sido restaurada a su estado base. A continuación el análisis completo de la contingencia:</p>
+<h4>Análisis de Contingencia — Desconexión de Línea 39 (50612 → 50614)</h4>
+<h5>Comparativa de indicadores globales</h5>
+<div class="tabla"><table>
+<tr><th>Indicador</th><th>Base (línea 39 conectada)</th><th>Contingencia (línea 39 desconectada)</th><th>Variación</th></tr>
+<tr><td><strong>Iteraciones N-R</strong></td><td>5</td><td>5</td><td>Sin cambio</td></tr>
+<tr><td><strong>Barras con resultado</strong></td><td>513</td><td>510</td><td>−3 barras</td></tr>
+<tr><td><strong>Violaciones totales</strong></td><td>40</td><td>40</td><td>Sin cambio</td></tr>
+<tr><td><strong>Subtensiones</strong></td><td>29</td><td>29</td><td>Sin cambio</td></tr>
+<tr><td><strong>Sobretensiones</strong></td><td>11</td><td>11</td><td>Sin cambio</td></tr>
+<tr><td><strong>Cargabilidad máx. líneas</strong></td><td>59.20 %</td><td>42.71 %</td><td>−16.49 pp</td></tr>
+<tr><td><strong>Cargabilidad máx. trafos</strong></td><td>88.72 %</td><td>88.72 %</td><td>Sin cambio</td></tr>
+<tr><td><strong>Sobrecargas (líneas + trafos)</strong></td><td>0</td><td>0</td><td>Sin cambio</td></tr>
+</table></div>
+<h5>Conclusiones</h5>
+<p>1. <strong>Sin sobrecargas:</strong> La desconexión de la línea más cargada no generó ninguna sobrecarga en líneas ni en transformadores. La red absorbe la contingencia sin superar el 100 % en ningún elemento.</p>
+<p>2. <strong>Perfil de tensión inalterado:</strong> El número de violaciones (40 en total: 29 subtensiones y 11 sobretensiones) no cambió. Las barras más críticas (MIRT3T, OROT2T, HERT1T) mantienen exactamente los mismos valores de tensión, lo que indica que la línea 39 no tiene influencia significativa sobre esos nodos.</p>
+<p>3. <strong>Reducción de cargabilidad en líneas:</strong> Al retirar la línea 39, el flujo que circulaba por ella se redistribuye entre las rutas paralelas, y la línea más cargada del sistema pasa de 59.20 % a 42.71 % (−16.49 puntos porcentuales). Esto es coherente con una topología mallada con redundancia suficiente.</p>
+<p>4. <strong>Barras sin resultado:</strong> Pasan de 11 a 14 (−3 barras con resultado). Las 3 barras adicionales sin resultado corresponden a nodos que quedaron eléctricamente aislados al retirar la línea 39, lo que confirma que esa línea era el único camino de suministro para esos nodos en el modelo.</p>
+<p>5. <strong>Estado restaurado:</strong> La línea 39 ha sido reconectada y el flujo recalculado. La red vuelve a su estado base (513 barras con resultado, cargabilidad máxima 59.20 % / 88.72 %).</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 12<span class="hora">01:02:44</span></div>
+                <div class="usuario">Calculá el cortocircuito trifásico, caso máximo, según IEC 60909 y dame las 10 barras con mayor corriente inicial simétrica, con su índice, nombre, tensión nominal e I’’k en kA, y la potencia de cortocircuito de la barra de mayor corriente. Indicá los supuestos que usaste.</div>
+                <p class="meta"><strong>Herramientas:</strong> run_power_flow, run_short_circuit · 3 iteraciones del agente · 5 iteraciones Newton-Raphson · 31.3 s · 28,813 tokens · $0.1036</p>
+                <div class="respuesta">
+                    <h4>Cortocircuito Trifásico Máximo — CR_Max (IEC 60909)</h4>
+<p><strong>Fuente de datos:</strong> modelo PSS/E — impedancias de máquina extraídas de la columna <em>X Source (pu)</em> del registro ZX.</p>
+<h5>Resumen global</h5>
+<div class="tabla"><table>
+<tr><th>Indicador</th><th>Valor</th></tr>
+<tr><td>Norma</td><td>IEC 60909</td></tr>
+<tr><td>Tipo de falla</td><td>Trifásica (3ph)</td></tr>
+<tr><td>Caso</td><td>Máximo</td></tr>
+<tr><td>Barras con resultado</td><td>513 de 524</td></tr>
+<tr><td><strong>I''k máxima</strong></td><td><strong>50.78 kA</strong> (barra 58521 — REV-U2)</td></tr>
+<tr><td>I''k mínima</td><td>0.09 kA (barra 58336)</td></tr>
+<tr><td>I''k mediana</td><td>4.60 kA</td></tr>
+</table></div>
+<h5>Top 10 barras con mayor corriente inicial simétrica de cortocircuito</h5>
+<div class="tabla"><table>
+<tr><th>Ranking</th><th>Índice barra</th><th>Nombre</th><th>Vn (kV)</th><th>I''k (kA)</th></tr>
+<tr><td>1</td><td>58521</td><td>REV-U2</td><td>13.8</td><td>50.78</td></tr>
+<tr><td>2</td><td>54270</td><td>PIR-U1</td><td>13.8</td><td>44.98</td></tr>
+<tr><td>3</td><td>58121</td><td>ANG-U2</td><td>13.8</td><td>44.84</td></tr>
+<tr><td>4</td><td>58122</td><td>ANG-U3</td><td>13.8</td><td>44.55</td></tr>
+<tr><td>5</td><td>50271</td><td>MIR2-U1</td><td>13.8</td><td>38.17</td></tr>
+<tr><td>6</td><td>50921</td><td>GAB-U456</td><td>13.8</td><td>37.16</td></tr>
+<tr><td>7</td><td>58023</td><td>CAC-U4</td><td>13.8</td><td>35.14</td></tr>
+<tr><td>8</td><td>50121</td><td>DEN-U2</td><td>13.8</td><td>34.87</td></tr>
+<tr><td>9</td><td>50221</td><td>ARE-U2</td><td>13.8</td><td>34.83</td></tr>
+<tr><td>10</td><td>50220</td><td>ARE-U1</td><td>13.8</td><td>34.50</td></tr>
+</table></div>
+<h5>Potencia de cortocircuito — barra de mayor corriente (REV-U2, índice 58521)</h5>
+<div class="tabla"><table>
+<tr><th>Parámetro</th><th>Valor</th></tr>
+<tr><td>Barra</td><td>58521 — REV-U2</td></tr>
+<tr><td>Tensión nominal</td><td>13.8 kV</td></tr>
+<tr><td>I''k</td><td>50.78 kA</td></tr>
+<tr><td><strong>S''k</strong></td><td><strong>1 213.70 MVA</strong></td></tr>
+</table></div>
+<h5>Supuestos aplicados en el cálculo</h5>
+<p>Los siguientes supuestos fueron declarados por la herramienta y deben considerarse al interpretar los resultados:</p>
+<p>1. <strong>Resistencia de máquina:</strong> La columna <em>R source (pu)</em> viene en cero en el modelo PSS/E; se asumió <strong>R = X / 20</strong> para todas las máquinas.</p>
+<p>2. <strong>Tensión nominal de máquina:</strong> Se utilizó la tensión nominal de la barra de conexión, ya que el modelo no trae un campo explícito de tensión nominal de máquina.</p>
+<p>3. <strong>Factor de potencia nominal de máquina:</strong> Se asumió <strong>cos φ = 0.85</strong> para todas las unidades.</p>
+<p>4. <strong>Interconexiones internacionales</strong> (Nicaragua 1, Nicaragua 2, Panamá 1, Panamá 2, Panamá 3): modeladas como fuentes ideales con <strong>S_cc = 2 000 MVA</strong> y <strong>R/X = 0.1</strong>, como parámetro declarado, no como dato del modelo original.</p>
+<p>Adicionalmente, la herramienta aplicó una corrección de datos: el campo <em>xdss_pu</em> fue remapeado desde la columna <em>X Source (pu)</em> (impedancia de máquina), dado que la columna <em>Xtran (pu)</em> (transformador elevador) viene en cero en este modelo.</p>
+<h5>Observaciones técnicas</h5>
+<p class="item">Las 10 barras con mayor I''k operan todas a <strong>13.8 kV</strong>, nivel de tensión de los terminales de generación. Esto es esperable: las barras de máquina concentran la mayor aportación de corriente de cortocircuito al estar directamente conectadas a las fuentes.</p>
+<p class="item">La dispersión entre I''k máxima (50.78 kA) y mediana (4.60 kA) es muy amplia, lo que refleja la heterogeneidad del sistema CR entre barras de generación y barras de carga/transmisión.</p>
+<p class="item">Los resultados son válidos para dimensionamiento de equipos de maniobra y protecciones, con la salvedad de los supuestos enumerados arriba.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 13<span class="hora">01:03:50</span></div>
+                <div class="usuario">Cargá la red CR_Med y dame el resumen del flujo de potencia: tensión mínima y máxima en pu, cuántas barras tiene y cuántas tienen resultado, iteraciones de Newton-Raphson y la cargabilidad máxima de líneas y de transformadores.</div>
+                <p class="meta"><strong>Herramientas:</strong> run_power_flow · 2 iteraciones del agente · 5 iteraciones Newton-Raphson · 18.2 s · 13,284 tokens · $0.0471</p>
+                <div class="respuesta">
+                    <p>Aquí está el resumen completo del flujo de potencia para la red <strong>CR_Med</strong>:</p>
+<h3>Resumen del Flujo de Potencia — CR_Med</h3>
+<div class="tabla"><table>
+<tr><th>Parámetro</th><th>Valor</th></tr>
+<tr><td><strong>Convergencia</strong></td><td>Sí (Newton-Raphson)</td></tr>
+<tr><td><strong>Iteraciones N-R</strong></td><td>5</td></tr>
+<tr><td><strong>Barras totales</strong></td><td>524</td></tr>
+<tr><td><strong>Barras con resultado</strong></td><td>513</td></tr>
+<tr><td><strong>Barras sin resultado</strong></td><td>11</td></tr>
+<tr><td><strong>Tensión mínima</strong></td><td>0.7930 pu</td></tr>
+<tr><td><strong>Tensión máxima</strong></td><td>1.2490 pu</td></tr>
+<tr><td><strong>Cargabilidad máx. de líneas</strong></td><td>42.95 %</td></tr>
+<tr><td><strong>Cargabilidad máx. de transformadores</strong></td><td>88.64 %</td></tr>
+</table></div>
+<h4>Observaciones técnicas</h4>
+<p class="item"><strong>Iteraciones N-R:</strong> El flujo convergió en <strong>5 iteraciones</strong>, lo que indica un condicionamiento numérico razonable para una red de esta escala (524 barras).</p>
+<p class="item"><strong>Barras sin resultado (11):</strong> Corresponden a 3 unidades generadoras no despachadas en este escenario y 8 devanados terciarios desactivados. Las herramientas filtran automáticamente los valores NaN; no representan un problema numérico.</p>
+<p class="item"><strong>Perfil de tensión:</strong> Los valores observados (0.7930 pu – 1.2490 pu) están <strong>fuera del rango operacional estándar [0.95 – 1.05] pu</strong>, lo cual es una condición de fondo conocida del modelo CR. Esto implica que se esperan numerosas violaciones de tensión si se realiza ese análisis; los umbrales de evaluación siguen siendo 0.95/1.05 pu.</p>
+<p class="item"><strong>Cargabilidad:</strong> Ninguna línea ni transformador supera el 100 % en este escenario. El elemento más comprometido es un transformador al <strong>88.64 %</strong> de su capacidad, mientras que las líneas se mantienen holgadas con un máximo de <strong>42.95 %</strong>.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 14<span class="hora">01:04:38</span></div>
+                <div class="usuario">¿Cuántas barras tienen subtensión (menos de 0,95 pu)? Listá las 5 peores con su índice, nombre y tensión.</div>
+                <p class="meta"><strong>Herramientas:</strong> get_voltage_violations · 2 iteraciones del agente · 12.2 s · 16,324 tokens · $0.0566</p>
+                <div class="respuesta">
+                    <h3>Violaciones de Subtensión — CR_Med</h3>
+<p>En la red CR_Med se detectaron <strong>28 barras con subtensión</strong> (tensión < 0.95 pu), de un total de 58 violaciones (28 subtensiones + 30 sobretensiones).</p>
+<h4>Las 5 peores subtensiones</h4>
+<div class="tabla"><table>
+<tr><th>Ranking</th><th>Índice de barra</th><th>Nombre</th><th>Tensión (pu)</th><th>Desviación respecto a 0.95 pu</th></tr>
+<tr><td>1</td><td>50280</td><td>MIRT3T</td><td>0.7930 pu</td><td>−0.1570 pu</td></tr>
+<tr><td>2</td><td>58312</td><td>MOINRECO</td><td>0.8625 pu</td><td>−0.0875 pu</td></tr>
+<tr><td>3</td><td>58234</td><td>LEET4T</td><td>0.8926 pu</td><td>−0.0574 pu</td></tr>
+<tr><td>4</td><td>53230</td><td>GART1T</td><td>0.8961 pu</td><td>−0.0539 pu</td></tr>
+<tr><td>5</td><td>50830</td><td>PBLT1T</td><td>0.8996 pu</td><td>−0.0504 pu</td></tr>
+</table></div>
+<h4>Observaciones</h4>
+<p class="item">La barra <strong>MIRT3T</strong> (índice 50280) es la más crítica, con una tensión de <strong>0.7930 pu</strong>, lo que representa una desviación de <strong>0.1570 pu</strong> (15.70 %) por debajo del umbral de 0.95 pu.</p>
+<p class="item">La barra <strong>MOINRECO</strong> (índice 58312) es la segunda más severa, con <strong>0.8625 pu</strong> y una desviación de <strong>0.0875 pu</strong> (8.75 %).</p>
+<p class="item">Las barras 3.ª a 5.ª (LEET4T, GART1T, PBLT1T) se encuentran en el rango <strong>0.89–0.90 pu</strong>, con desviaciones entre 0.0504 y 0.0574 pu.</p>
+<p class="item">Como se indicó en el análisis previo, la red CR opera con perfiles de tensión que exceden el rango estándar [0.95–1.05] pu; la presencia de 28 barras en subtensión es consistente con esa condición de fondo del modelo.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 15<span class="hora">01:05:36</span></div>
+                <div class="usuario">¿Cuántas barras tienen sobretensión (más de 1,05 pu)? Listá las 5 peores con su índice, nombre y tensión.</div>
+                <p class="meta"><strong>Herramientas:</strong> get_voltage_violations · 2 iteraciones del agente · 13.7 s · 17,674 tokens · $0.0612</p>
+                <div class="respuesta">
+                    <h3>Violaciones de Sobretensión — CR_Med</h3>
+<p>En la red CR_Med se detectaron <strong>30 barras con sobretensión</strong> (tensión > 1.05 pu), de un total de 58 violaciones (28 subtensiones + 30 sobretensiones).</p>
+<h4>Las 5 peores sobretensiones</h4>
+<div class="tabla"><table>
+<tr><th>Ranking</th><th>Índice de barra</th><th>Nombre</th><th>Tensión (pu)</th><th>Desviación respecto a 1.05 pu</th></tr>
+<tr><td>1</td><td>51132</td><td>OROT2T</td><td>1.2490 pu</td><td>+0.1990 pu</td></tr>
+<tr><td>2</td><td>53630</td><td>HERT1T</td><td>1.2297 pu</td><td>+0.1797 pu</td></tr>
+<tr><td>3</td><td>58335</td><td>MOIT3T</td><td>1.1928 pu</td><td>+0.1428 pu</td></tr>
+<tr><td>4</td><td>54780</td><td>COYT1T</td><td>1.1646 pu</td><td>+0.1146 pu</td></tr>
+<tr><td>5</td><td>53332</td><td>COCT3T</td><td>1.1636 pu</td><td>+0.1136 pu</td></tr>
+</table></div>
+<h4>Observaciones</h4>
+<p class="item">La barra más crítica es <strong>OROT2T</strong> (índice 51132), con <strong>1.2490 pu</strong>, una desviación de <strong>0.1990 pu</strong> (19.90 %) por encima del umbral de 1.05 pu. Es también la segunda violación más severa de toda la red, solo superada en magnitud por la subtensión de MIRT3T.</p>
+<p class="item"><strong>HERT1T</strong> (índice 53630) alcanza <strong>1.2297 pu</strong>, con una desviación de <strong>0.1797 pu</strong> (17.97 %).</p>
+<p class="item">Las barras 3.ª a 5.ª (MOIT3T, COYT1T, COCT3T) se encuentran en el rango <strong>1.16–1.19 pu</strong>, con desviaciones entre 0.1136 y 0.1428 pu.</p>
+<p class="item">Como se indicó anteriormente, la red CR opera con perfiles de tensión que exceden el rango estándar [0.95–1.05] pu por diseño del modelo; la presencia de 30 barras en sobretensión es esperable y consistente con esa condición de fondo.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 16<span class="hora">01:06:03</span></div>
+                <div class="usuario">Listá las 5 líneas y los 5 transformadores con mayor cargabilidad, con su porcentaje.</div>
+                <p class="meta"><strong>Herramientas:</strong> get_overloaded_lines · 2 iteraciones del agente · 15.1 s · 22,225 tokens · $0.0760</p>
+                <div class="respuesta">
+                    <p>Con los datos obtenidos, presento los rankings solicitados:</p>
+<h3>Elementos más cargados — CR_Med</h3>
+<h4>Top 5 Líneas</h4>
+<div class="tabla"><table>
+<tr><th>Ranking</th><th>Índice</th><th>Bus origen</th><th>Bus destino</th><th>Cargabilidad</th></tr>
+<tr><td>1</td><td>21</td><td>50160</td><td>50164</td><td>42.95 %</td></tr>
+<tr><td>2</td><td>15</td><td>50102</td><td>50103</td><td>42.09 %</td></tr>
+<tr><td>3</td><td>9</td><td>50052</td><td>50102</td><td>40.61 %</td></tr>
+<tr><td>4</td><td>6</td><td>50002</td><td>51150</td><td>39.94 %</td></tr>
+<tr><td>5</td><td>35</td><td>50504</td><td>50604</td><td>39.26 %</td></tr>
+</table></div>
+<h4>Top 5 Transformadores</h4>
+<div class="tabla"><table>
+<tr><th>Ranking</th><th>Índice</th><th>Tipo</th><th>Bus AT</th><th>Bus BT (/ MT)</th><th>Cargabilidad</th></tr>
+<tr><td>1</td><td>12</td><td>2 devanados</td><td>50253</td><td>50272</td><td>88.64 %</td></tr>
+<tr><td>2</td><td>92</td><td>2 devanados</td><td>58212</td><td>58237</td><td>84.17 %</td></tr>
+<tr><td>3</td><td>6</td><td>2 devanados</td><td>50103</td><td>50123</td><td>81.90 %</td></tr>
+<tr><td>4</td><td>52</td><td>2 devanados</td><td>51160</td><td>51170</td><td>79.49 %</td></tr>
+<tr><td>5</td><td>46</td><td>2 devanados</td><td>50900</td><td>50921</td><td>76.72 %</td></tr>
+</table></div>
+<h4>Observaciones</h4>
+<p class="item"><strong>Ninguna línea ni transformador supera el 100 %</strong> de cargabilidad en el escenario CR_Med: la red opera sin sobrecargas en este escenario de demanda media.</p>
+<p class="item">La <strong>línea más cargada</strong> (índice 21, entre barras 50160 y 50164) alcanza apenas el <strong>42.95 %</strong>, lo que indica un margen de capacidad holgado en las líneas.</p>
+<p class="item">El <strong>transformador más cargado</strong> (índice 12, entre barras 50253 y 50272) llega al <strong>88.64 %</strong>, siendo el elemento serie con mayor proximidad a su límite térmico en toda la red. Merece seguimiento ante incrementos de demanda o contingencias.</p>
+<p class="item">Los 5 transformadores más cargados son todos de <strong>2 devanados</strong>, con cargabilidades entre 76.72 % y 88.64 %.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 17<span class="hora">01:06:59</span></div>
+                <div class="usuario">Cargá la red CR_Min y dame el resumen del flujo de potencia: tensión mínima y máxima en pu, cuántas barras tiene y cuántas tienen resultado, iteraciones de Newton-Raphson y la cargabilidad máxima de líneas y de transformadores.</div>
+                <p class="meta"><strong>Herramientas:</strong> run_power_flow · 2 iteraciones del agente · 5 iteraciones Newton-Raphson · 18.8 s · 13,279 tokens · $0.0470</p>
+                <div class="respuesta">
+                    <p>Aquí está el resumen completo del flujo de potencia para la red <strong>CR_Min</strong>:</p>
+<h3>Resumen — Flujo de Potencia CR_Min</h3>
+<div class="tabla"><table>
+<tr><th>Parámetro</th><th>Valor</th></tr>
+<tr><td><strong>Convergencia</strong></td><td>Sí</td></tr>
+<tr><td><strong>Iteraciones Newton-Raphson</strong></td><td>5</td></tr>
+<tr><td><strong>Total de barras</strong></td><td>524</td></tr>
+<tr><td><strong>Barras con resultado</strong></td><td>513</td></tr>
+<tr><td><strong>Barras sin resultado</strong></td><td>11</td></tr>
+<tr><td><strong>Tensión mínima</strong></td><td>0.8085 pu</td></tr>
+<tr><td><strong>Tensión máxima</strong></td><td>1.2541 pu</td></tr>
+<tr><td><strong>Cargabilidad máxima de líneas</strong></td><td>71.66 %</td></tr>
+<tr><td><strong>Cargabilidad máxima de transformadores</strong></td><td>88.54 %</td></tr>
+</table></div>
+<h4>Observaciones técnicas</h4>
+<p class="item"><strong>Convergencia:</strong> El flujo convergió en <strong>5 iteraciones</strong> de Newton-Raphson, lo que indica un buen condicionamiento numérico de la red para este escenario de demanda mínima.</p>
+<p class="item"><strong>Barras sin resultado (11):</strong> Corresponden a 3 unidades generadoras no despachadas y 8 devanados terciarios desactivados por despacho operativo. No representan un problema numérico; las herramientas filtran estos NaN automáticamente.</p>
+<p class="item"><strong>Perfil de tensión:</strong> Los valores observados (0.8085 pu – 1.2541 pu) <strong>violan el rango operacional estándar [0.95 – 1.05] pu</strong>. Esto es una condición de fondo conocida del modelo CR: el sistema opera con perfiles de tensión fuera del rango estándar, lo cual es esperable y correcto en este modelo. Si desea un análisis detallado de las violaciones, puedo ejecutar <code>get_voltage_violations</code>.</p>
+<p class="item"><strong>Sobrecargas:</strong> Ninguna línea ni transformador supera el 100 % de cargabilidad en este escenario. El elemento más exigido es un transformador al <strong>88.54 %</strong>, con margen de seguridad disponible.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 18<span class="hora">01:07:26</span></div>
+                <div class="usuario">¿Cuántas barras tienen subtensión (menos de 0,95 pu)? Listá las 5 peores con su índice, nombre y tensión.</div>
+                <p class="meta"><strong>Herramientas:</strong> get_voltage_violations · 2 iteraciones del agente · 13.7 s · 15,368 tokens · $0.0535</p>
+                <div class="respuesta">
+                    <h3>Violaciones de subtensión — CR_Min</h3>
+<p>En total se detectaron <strong>17 barras con subtensión</strong> (V < 0.95 pu) y <strong>40 con sobretensión</strong> (V > 1.05 pu), sumando <strong>57 violaciones</strong> en la red.</p>
+<h4>Las 5 peores subtensiones</h4>
+<div class="tabla"><table>
+<tr><th>Ranking</th><th>Índice de barra</th><th>Nombre</th><th>Tensión (pu)</th><th>Desviación respecto a 0.95 pu</th></tr>
+<tr><td>1</td><td>50280</td><td>MIRT3T</td><td>0.8085 pu</td><td>−0.1415 pu</td></tr>
+<tr><td>2</td><td>58312</td><td>MOINRECO</td><td>0.8599 pu</td><td>−0.0901 pu</td></tr>
+<tr><td>3</td><td>54080</td><td>TERT1T</td><td>0.9205 pu</td><td>−0.0295 pu</td></tr>
+<tr><td>4</td><td>58336</td><td>MOIT4T</td><td>0.9208 pu</td><td>−0.0292 pu</td></tr>
+<tr><td>5</td><td>50130</td><td>CORT4T</td><td>0.9283 pu</td><td>−0.0217 pu</td></tr>
+</table></div>
+<h4>Observaciones</h4>
+<p class="item">La barra más crítica por subtensión es <strong>MIRT3T</strong> (índice 50280), con 0.8085 pu, es decir, <strong>14.15 % por debajo</strong> del umbral operacional de 0.95 pu.</p>
+<p class="item">La segunda peor, <strong>MOINRECO</strong> (índice 58312), se encuentra a 0.8599 pu, con una desviación de <strong>9.01 %</strong> bajo el umbral.</p>
+<p class="item">Las tres restantes (TERT1T, MOIT4T, CORT4T) están más próximas al límite, con desviaciones entre 2.17 % y 2.95 %.</p>
+<p class="item">Como se mencionó anteriormente, el modelo CR_Min opera con perfiles de tensión fuera del rango estándar [0.95–1.05] pu; las 17 subtensiones detectadas son consistentes con esa condición de fondo del escenario de demanda mínima.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 19<span class="hora">01:08:20</span></div>
+                <div class="usuario">¿Cuántas barras tienen sobretensión (más de 1,05 pu)? Listá las 5 peores con su índice, nombre y tensión.</div>
+                <p class="meta"><strong>Herramientas:</strong> get_voltage_violations · 2 iteraciones del agente · 15.0 s · 17,617 tokens · $0.0607</p>
+                <div class="respuesta">
+                    <h3>Sobretensiones — CR_Min</h3>
+<p>En total hay <strong>40 barras con sobretensión</strong> (V > 1.05 pu), sobre un total de <strong>57 violaciones</strong> en la red (17 subtensiones + 40 sobretensiones).</p>
+<h4>Las 5 peores sobretensiones</h4>
+<div class="tabla"><table>
+<tr><th>Ranking</th><th>Índice de barra</th><th>Nombre</th><th>Tensión (pu)</th><th>Desviación respecto a 1.05 pu</th></tr>
+<tr><td>1</td><td>51132</td><td>OROT2T</td><td>1.2541 pu</td><td>+0.2041 pu</td></tr>
+<tr><td>2</td><td>51134</td><td>OROT3T</td><td>1.1910 pu</td><td>+0.1410 pu</td></tr>
+<tr><td>3</td><td>54780</td><td>COYT1T</td><td>1.1590 pu</td><td>+0.1090 pu</td></tr>
+<tr><td>4</td><td>50282</td><td>MIRT8T</td><td>1.1499 pu</td><td>+0.0999 pu</td></tr>
+<tr><td>5</td><td>53630</td><td>HERT1T</td><td>1.1469 pu</td><td>+0.0969 pu</td></tr>
+</table></div>
+<h4>Observaciones</h4>
+<p class="item">La barra más crítica por sobretensión es <strong>OROT2T</strong> (índice 51132), con 1.2541 pu, es decir, <strong>20.41 % por encima</strong> del umbral operacional de 1.05 pu. Es también la violación más severa de toda la red, superando incluso a la peor subtensión (MIRT3T, −14.15 %).</p>
+<p class="item">La segunda peor, <strong>OROT3T</strong> (índice 51134), alcanza 1.1910 pu, con una desviación de <strong>+14.10 %</strong> sobre el umbral.</p>
+<p class="item">Las tres restantes (COYT1T, MIRT8T, HERT1T) presentan desviaciones entre +9.69 % y +10.90 %.</p>
+<p class="item">Las 40 sobretensiones detectadas son consistentes con la condición de fondo del modelo CR_Min, que opera con perfiles de tensión fuera del rango estándar [0.95–1.05] pu, como se indicó en el análisis inicial.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 20<span class="hora">01:09:07</span></div>
+                <div class="usuario">Listá las 5 líneas y los 5 transformadores con mayor cargabilidad, con su porcentaje.</div>
+                <p class="meta"><strong>Herramientas:</strong> run_power_flow, get_overloaded_lines · 3 iteraciones del agente · 5 iteraciones Newton-Raphson · 16.6 s · 43,356 tokens · $0.1396</p>
+                <div class="respuesta">
+                    <p>Con los resultados obtenidos, presento las tablas solicitadas:</p>
+<h3>Cargabilidad — CR_Min</h3>
+<h4>5 líneas con mayor cargabilidad</h4>
+<div class="tabla"><table>
+<tr><th>Ranking</th><th>Índice línea</th><th>Bus origen</th><th>Bus destino</th><th>Cargabilidad (%)</th></tr>
+<tr><td>1</td><td>39</td><td>50612</td><td>50614</td><td>71.66 %</td></tr>
+<tr><td>2</td><td>13</td><td>50058</td><td>50062</td><td>54.40 %</td></tr>
+<tr><td>3</td><td>21</td><td>50160</td><td>50164</td><td>42.17 %</td></tr>
+<tr><td>4</td><td>15</td><td>50102</td><td>50103</td><td>41.94 %</td></tr>
+<tr><td>5</td><td>132</td><td>58300</td><td>58350</td><td>38.01 %</td></tr>
+</table></div>
+<h4>5 transformadores con mayor cargabilidad</h4>
+<div class="tabla"><table>
+<tr><th>Ranking</th><th>Índice trafo</th><th>Tipo</th><th>Bus AT</th><th>Bus BT / MT</th><th>Cargabilidad (%)</th></tr>
+<tr><td>1</td><td>12</td><td>trafo_2w</td><td>50253</td><td>50272</td><td>88.54 %</td></tr>
+<tr><td>2</td><td>6</td><td>trafo_2w</td><td>50103</td><td>50123</td><td>81.62 %</td></tr>
+<tr><td>3</td><td>56</td><td>trafo_2w</td><td>51350</td><td>51358</td><td>80.95 %</td></tr>
+<tr><td>4</td><td>52</td><td>trafo_2w</td><td>51160</td><td>51170</td><td>80.21 %</td></tr>
+<tr><td>5</td><td>5</td><td>trafo_2w</td><td>50102</td><td>50122</td><td>75.79 %</td></tr>
+</table></div>
+<h4>Observaciones</h4>
+<p class="item"><strong>Ninguna línea ni transformador supera el 100 %</strong> de cargabilidad en el escenario CR_Min: la red opera sin sobrecargas en condición de demanda mínima.</p>
+<p class="item">La línea más cargada (índice 39, entre barras 50612 y 50614) alcanza el <strong>71.66 %</strong>, con margen de seguridad de ~28 puntos porcentuales.</p>
+<p class="item">El transformador más cargado (índice 12, entre barras 50253 y 50272) llega al <strong>88.54 %</strong>, siendo el elemento serie más próximo a su límite en toda la red.</p>
+<p class="item">Los cuatro transformadores del top-5 son de dos devanados (trafo_2w), todos con cargabilidades entre 75 % y 89 %, lo que los convierte en los elementos más críticos del escenario de demanda mínima.</p>
+                </div>
+            </section>
+            
+            <section class="consulta">
+                <div class="q-header">Consulta 21<span class="hora">01:10:02</span></div>
+                <div class="usuario">Compará el número de subtensiones y sobretensiones entre CR_Min, CR_Med y CR_Max en una sola tabla.</div>
+                <p class="meta"><strong>Herramientas:</strong> run_power_flow, get_voltage_violations, run_power_flow, get_voltage_violations, run_power_flow, get_voltage_violations · 7 iteraciones del agente · 5 iteraciones Newton-Raphson · 43.2 s · 83,529 tokens · $0.2628</p>
+                <div class="respuesta">
+                    <p>Tengo todos los datos. Aquí la comparación completa:</p>
+<h3>Comparación de violaciones de tensión — CR_Min / CR_Med / CR_Max</h3>
+<h4>Conteos globales</h4>
+<div class="tabla"><table>
+<tr><th>Escenario</th><th>Subtensiones (V < 0.95 pu)</th><th>Sobretensiones (V > 1.05 pu)</th><th><strong>Total violaciones</strong></th><th>V mín observada (pu)</th><th>V máx observada (pu)</th></tr>
+<tr><td><strong>CR_Min</strong></td><td>17</td><td>40</td><td><strong>57</strong></td><td>0.8085</td><td>1.2541</td></tr>
+<tr><td><strong>CR_Med</strong></td><td>28</td><td>30</td><td><strong>58</strong></td><td>0.7930</td><td>1.2490</td></tr>
+<tr><td><strong>CR_Max</strong></td><td>29</td><td>11</td><td><strong>40</strong></td><td>0.7521</td><td>1.2474</td></tr>
+</table></div>
+<h4>Tendencias observadas</h4>
+<div class="tabla"><table>
+<tr><th>Tendencia</th><th>Descripción</th></tr>
+<tr><td><strong>Subtensiones</strong></td><td>Aumentan con la demanda: 17 → 28 → 29. A mayor carga, más barras caen bajo 0.95 pu.</td></tr>
+<tr><td><strong>Sobretensiones</strong></td><td>Disminuyen con la demanda: 40 → 30 → 11. A menor carga, la generación (especialmente hidráulica) eleva las tensiones en barras livianas.</td></tr>
+<tr><td><strong>Total violaciones</strong></td><td>CR_Min y CR_Med son similares (~57–58), mientras CR_Max tiene significativamente menos (40), porque las sobretensiones se reducen más rápido de lo que crecen las subtensiones.</td></tr>
+<tr><td><strong>V mínima observada</strong></td><td>Empeora con la demanda: 0.8085 → 0.7930 → 0.7521 pu. La barra MIRT3T es la más crítica en los tres escenarios.</td></tr>
+<tr><td><strong>V máxima observada</strong></td><td>Prácticamente estable entre escenarios (~1.247–1.254 pu), dominada por OROT2T en los tres casos.</td></tr>
+</table></div>
+<h4>Nota sobre el perfil de tensión de la red CR</h4>
+<p>Como se indicó anteriormente, el modelo CR opera con perfiles de tensión que violan el rango estándar [0.95–1.05] pu en los tres escenarios. Reportar decenas de violaciones es un comportamiento esperado y correcto del modelo, no una anomalía numérica. Los umbrales de evaluación se mantienen en los valores estándar (0.95 / 1.05 pu) en todos los casos.</p>
+                </div>
+            </section>
+            
+</body>
+</html>
