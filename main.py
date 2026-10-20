@@ -49,7 +49,7 @@ from tools import reset_network, _STATE
 # Configuración
 # ═════════════════════════════════════════════════════════════════════════
 
-VERSION = "1.4.0"
+VERSION = "1.4.1"
 
 # Precios Claude Sonnet (USD por millón de tokens)
 PRECIO_INPUT  = 3.00

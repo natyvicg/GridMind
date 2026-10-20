@@ -35,6 +35,7 @@ Retorno:
 """
 
 import os
+import re
 from anthropic import Anthropic
 
 from definitions import ANTHROPIC_TOOLS
@@ -56,6 +57,32 @@ MAX_TOKENS_PER_CALL = 4000
 # Temperatura de muestreo. Cero reduce la variabilidad entre corridas del
 # mismo banco de consultas; no elimina los errores de razonamiento.
 TEMPERATURE = 0
+
+# Salvaguarda del lazo: una respuesta final que contiene cifras de la red
+# (número con unidad eléctrica) sin que la consulta haya ejecutado ninguna
+# herramienta se devuelve al modelo una vez con la instrucción de ejecutar
+# las herramientas. El historial no contiene resultados de herramientas, así
+# que esas cifras no pueden provenir de un cálculo de esta consulta.
+_CIFRA_RED = re.compile(r"\d+[.,]\d+\s*(?:pu|kA|kV|MVA|MVAr|MW|%)", re.IGNORECASE)
+# Fila de tabla Markdown con un número decimal (las unidades suelen ir en el
+# encabezado, no en la celda).
+_FILA_CON_DECIMAL = re.compile(r"^\s*\|.*\d+[.,]\d+.*\|\s*$", re.MULTILINE)
+MAX_REINTENTOS_SIN_HERRAMIENTA = 1
+AVISO_SIN_HERRAMIENTA = (
+    "[Salvaguarda del sistema] La respuesta anterior contiene cifras de la red, "
+    "pero en esta consulta no se ejecutó ninguna herramienta. El historial no "
+    "contiene resultados de herramientas, así que esas cifras no están "
+    "verificadas. Ejecute ahora las herramientas necesarias y responda "
+    "únicamente con sus resultados."
+)
+
+
+def respuesta_con_cifras_sin_herramienta(texto, tool_calls):
+    """True si la respuesta trae cifras de red y la consulta no usó herramientas."""
+    texto = texto or ""
+    if tool_calls:
+        return False
+    return bool(_CIFRA_RED.search(texto) or _FILA_CON_DECIMAL.search(texto))
 
 
 
@@ -183,7 +210,11 @@ Presente los rankings exactamente en el orden en que la herramienta los devuelve
 filas. Reporte los índices internos tal como los devuelve la herramienta (base 0 en redes IEEE); \
 si quiere agregar la numeración IEEE, hágalo en una columna aparte y rotulada. No interprete las \
 siglas de los nombres de subestación ni atribuya a barras o equipos características (ubicación, \
-tipo constructivo, función) que no estén en el resultado de la herramienta.
+tipo constructivo, función) que no estén en el resultado de la herramienta. Si el usuario pide \
+"los N elementos más cargados" sin distinguir tipo, entregue una sola tabla combinada de N filas \
+con líneas y transformadores, en el orden de la herramienta.
+Toda cifra de la red que aparezca en una respuesta debe provenir de una herramienta ejecutada en \
+esta misma consulta. Las cifras del historial sirven solo para comparar con las recién calculadas.
 """
 
 
@@ -222,6 +253,7 @@ def run_react_loop(user_query, client=None, system=SYSTEM_PROMPT, verbose=False,
     iterations = 0
     last_stop_reason = None
     final_text = ""
+    reintentos_sin_herramienta = 0
 
     for i in range(MAX_ITERATIONS):
         iterations = i + 1
@@ -268,6 +300,25 @@ def run_react_loop(user_query, client=None, system=SYSTEM_PROMPT, verbose=False,
                     "\"las 10 peores\") o dividí la consulta en partes."
                     .format(MAX_TOKENS_PER_CALL)
                 )
+            if (
+                response.stop_reason == "end_turn"
+                and reintentos_sin_herramienta < MAX_REINTENTOS_SIN_HERRAMIENTA
+                and respuesta_con_cifras_sin_herramienta(final_text, tool_calls)
+                and i + 1 < MAX_ITERATIONS
+            ):
+                reintentos_sin_herramienta += 1
+                if verbose:
+                    print("  [salvaguarda] respuesta con cifras sin herramienta; "
+                          "se pide ejecutar herramientas")
+                messages.append({"role": "user", "content": AVISO_SIN_HERRAMIENTA})
+                continue
+            if respuesta_con_cifras_sin_herramienta(final_text, tool_calls):
+                # El modelo insistió: la respuesta se entrega, pero marcada.
+                final_text += (
+                    "\n\n> **Aviso de la salvaguarda:** esta respuesta contiene "
+                    "cifras que no provienen de ninguna herramienta ejecutada en "
+                    "esta consulta. No están verificadas."
+                )
             break
 
         # Ejecutar todas las tool_use de este turno y armar tool_results.
@@ -297,5 +348,6 @@ def run_react_loop(user_query, client=None, system=SYSTEM_PROMPT, verbose=False,
         "usage": usage_total,
         "iterations": iterations,
         "stop_reason": last_stop_reason,
+        "reintentos_sin_herramienta": reintentos_sin_herramienta,
     }
 
