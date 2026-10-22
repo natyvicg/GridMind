@@ -2,18 +2,22 @@
 
 Agente de inteligencia artificial para análisis de sistemas eléctricos de potencia. GridMind integra un LLM (Claude, Anthropic) con PandaPower para responder consultas técnicas en lenguaje natural sobre redes eléctricas, delegando todos los cálculos numéricos al simulador.
 
-Desarrollado como Trabajo Final de Graduación (TFG) para la Licenciatura en Ingeniería Eléctrica, Universidad de Costa Rica.
+Desarrollado como Trabajo Final de Graduación (TFG) para la Licenciatura en Ingeniería Eléctrica, Universidad de Costa Rica. Versión actual: **1.4.1**.
 
 ## Arquitectura
 
-GridMind usa el patrón **ReAct** (Reason + Act): el LLM razona sobre la consulta, decide qué herramienta de PandaPower usar, Python la ejecuta, y el resultado vuelve al LLM para que siga razonando o genere la respuesta final. El LLM nunca ejecuta código directamente ni inventa valores numéricos.
+GridMind usa el patrón **ReAct** (Reason + Act): el LLM razona sobre la consulta, decide qué herramienta de PandaPower usar, Python la ejecuta, y el resultado vuelve al LLM para que siga razonando o genere la respuesta final. El LLM nunca ejecuta código directamente ni inventa valores numéricos. El modelo se invoca con temperatura 0 y un máximo de 12 iteraciones por consulta.
+
+### Salvaguardas
+
+Además de la validación de umbrales (ver más abajo), el lazo del agente incluye desde la versión 1.4.1 una **salvaguarda determinista**: si la respuesta final contiene cifras de la red (un número con decimales y unidad eléctrica, o una fila de tabla con decimales) y la consulta no ejecutó ninguna herramienta, el lazo devuelve la respuesta al modelo una vez con la instrucción de ejecutar las herramientas; si el modelo insiste, la respuesta se entrega marcada como no verificada. La salvaguarda existe porque el historial de la conversación contiene solo texto, no resultados de herramientas, y en dos corridas del banco de consultas el modelo completó tablas de sobretensiones con barras inexistentes creyendo tener el resultado anterior en su contexto. Una regla en el prompt (versión 1.3.1) no bastó; la verificación en código sí.
 
 ```
 Usuario → [consulta en lenguaje natural]
            ↓
        agent.py (loop ReAct con Claude)
            ↓
-       tools.py (7 herramientas PandaPower)
+       tools.py (8 herramientas PandaPower)
            ↓
        PandaPower (cálculo real Newton-Raphson)
            ↓
@@ -25,12 +29,12 @@ Usuario → [consulta en lenguaje natural]
 | Herramienta | Función |
 |---|---|
 | `run_power_flow` | Carga red y ejecuta flujo de potencia |
-| `get_voltage_violations` | Detecta barras con tensión fuera del rango operacional |
-| `get_overloaded_lines` | Detecta líneas con cargabilidad excesiva |
-| `run_short_circuit` | Corriente de cortocircuito trifásica (IEC 60909) |
+| `get_voltage_violations` | Detecta barras con tensión fuera del rango operacional; en la red CR agrega el nombre de subestación |
+| `get_overloaded_lines` | Detecta líneas y transformadores con cargabilidad por encima de un umbral (con umbral 0, lista la cargabilidad de todos) |
+| `run_short_circuit` | Corriente de cortocircuito trifásica o bifásica, caso máximo o mínimo (IEC 60909) |
 | `disconnect_line` | Desconecta una línea (simulación N-1) |
 | `reconnect_line` | Reconecta una línea previamente desconectada |
-| `modify_load` | Modifica potencia activa/reactiva de una carga |
+| `modify_load` | Modifica una carga identificada por su barra (`bus_index`), con un factor de escala (`scale_factor`, 1.5 = +50 %) o valores absolutos; la herramienta resuelve la carga y hace la aritmética |
 | `list_available_networks` | Lista todas las redes disponibles en el catálogo |
 
 ## Requisitos
@@ -74,8 +78,9 @@ python --version          # Debe ser >= 3.10
 pip show pandapower       # Debe estar instalado
 python -m tests.test_validacion_umbrales   # Umbrales e inputs, sin API key
 python -m tests.test_cortocircuito         # Cortocircuito, sin API key
-python -m tests.validar_agente             # Validación cruzada pre-mitigación
-python -m tests.validar_agente_v2          # Validación cruzada post-mitigación
+python -m tests.validar_agente             # Validación cruzada pre-mitigación (log v1)
+python -m tests.validar_agente_v2          # Validación cruzada post-mitigación (log v2)
+python -m tests.validar_agente_v3          # Validación cruzada sobre la versión 1.4.1 (log v3)
 ```
 
 `test_validacion_umbrales` valida la lógica de inputs y umbrales de `tools.py`. `test_cortocircuito` valida la capa de datos de cortocircuito y la guarda de procedencia. Ninguna de las dos requiere API key ni conexión a internet; la segunda sí requiere los archivos Excel de la red CR.
@@ -146,7 +151,9 @@ GridMind incluye 18 redes listas para usar: 15 redes IEEE estándar de PandaPowe
 
 - Los índices de barra son enteros grandes (50000+), no aplica convención IEEE 1-indexed.
 - Opera con tensiones fuera del rango estándar 0.95-1.05 pu por diseño operativo (Vmin típico ~0.75-0.81 pu, Vmax ~1.20-1.25 pu). Esto es una característica del modelo, no un error.
-- 11 de 524 barras no tienen resultado en `res_bus` por despacho operativo (3 unidades no despachadas + 8 devanados terciarios desactivados). Las herramientas filtran NaN automáticamente.
+- 11 de 524 barras no tienen resultado en `res_bus` por despacho operativo (3 barras cuyas 4 unidades generadoras no están despachadas + 8 devanados terciarios de transformadores fuera de servicio). Las herramientas filtran NaN automáticamente.
+- Las interconexiones con Nicaragua y Panamá se representan como cinco fuentes ideales en barras de frontera de 230 kV (decisión de `red_cr.py`; el Excel declara una única barra de referencia interna). `scripts/sensibilidad_frontera.py` compara ambas representaciones: en CR_Max las subtensiones pasan de 29 a 56 con la referencia interna. Los conteos de violaciones dependen de esta elección.
+- El Excel declara límites normales de 0.90 y 1.10 pu; GridMind evalúa violaciones con 0.95 y 1.05 pu, criterio de planificación.
 
 ## Cortocircuito y procedencia de datos
 
@@ -171,7 +178,11 @@ El error es silencioso en flujo de carga, porque `runpp` no usa `xdss_pu`. Se vu
 
 - **Resistencia de máquina:** el modelo trae `R source (pu)` en cero; se asume R = X / 20.
 - **Tensión nominal de máquina:** se usa la de la barra de conexión, al no haber campo explícito.
-- **Interconexiones:** `red_cr.py` modela las conexiones con Nicaragua y Panamá como cinco fuentes ideales en barras que el modelo original clasifica como barras de carga. Su potencia de cortocircuito se expone como parámetro (2000 MVA por defecto). `scripts/sensibilidad_cortocircuito.py` cuantifica el efecto: variar el supuesto de 500 a 20 000 MVA cambia la corriente en las barras de interconexión un 1082 %, pero mueve la mediana del resto de la red solo un 3.1 %.
+- **Factor de potencia nominal de máquina:** 0.85 (no está en el modelo). Entre 0.80 y 0.95 la corriente máxima varía 2 %.
+- **Temperatura final de conductor (caso mínimo):** 80 °C. Entre 20 y 120 °C la corriente máxima varía 0.03 %.
+- **Interconexiones:** `red_cr.py` modela las conexiones con Nicaragua y Panamá como cinco fuentes ideales en barras que el modelo original clasifica como barras pasivas. Su potencia de cortocircuito se expone como parámetro (2000 MVA y R/X = 0.1 por defecto, supuestos sin respaldo en datos públicos). `scripts/sensibilidad_cortocircuito.py` cuantifica el efecto: variar el supuesto de 500 a 20 000 MVA cambia la corriente media en las barras de interconexión de 6.5 a 76.9 kA, pero mueve la mediana del resto de la red solo un 3.1 %.
+
+Los scripts de sensibilidad usan `pandas.DataFrame.to_markdown`, que requiere el paquete `tabulate` (`pip install tabulate`); escriben su tabla en un `.xlsx` antes de imprimirla.
 
 ## Escenarios de validación
 
@@ -184,7 +195,7 @@ De las 15 redes IEEE, 9 producen los 4 escenarios viables; IEEE 145 y 300 fallan
 ```
 GridMind/
 ├── agent.py                    # Loop ReAct + system prompt
-├── tools.py                    # 7 herramientas PandaPower + dispatcher
+├── tools.py                    # 8 herramientas PandaPower + dispatcher
 ├── definitions.py              # JSON Schema de herramientas (Anthropic)
 ├── main.py                     # CLI interactiva con comandos especiales
 ├── escenarios.py               # Escenarios genéricos (15 IEEE) + curados (E1-E7)
@@ -193,6 +204,7 @@ GridMind/
 ├── datos_cortocircuito.py      # Capa de datos de cortocircuito (IEC 60909)
 ├── red_cr_transmisión.py       # Modelo de transmisión CR (referencia)
 ├── Base_CR_*_2023-Marzo.xlsx    # Datos de demanda CR (Min, Med, Max)
+├── sensibilidad_frontera.xlsx  # Salida de scripts/sensibilidad_frontera.py
 ├── environment.yml             # Entorno conda reproducible
 ├── requirements.txt            # Dependencias pip
 ├── .gitignore
@@ -206,8 +218,10 @@ GridMind/
 │   ├── test_cortocircuito.py       # Tests de la capa de cortocircuito (sin API)
 │   ├── correr_bateria.py           # Batería automatizada v1 (9 consultas CR)
 │   ├── correr_bateria_v2.py        # Batería automatizada v2 (post-corrección)
+│   ├── correr_bateria_v3.py        # Batería automatizada v3 (versión 1.4.1)
 │   ├── validar_agente.py           # Validación cruzada agente vs PandaPower
-│   └── validar_agente_v2.py        # Re-validación post-corrección de umbrales
+│   ├── validar_agente_v2.py        # Re-validación post-corrección de umbrales
+│   └── validar_agente_v3.py        # Validación sobre la versión 1.4.1
 │
 ├── scripts/                    # Diagnóstico y análisis (no son core)
 │   ├── validar_red_cr.py           # Validación inicial de la red CR
@@ -217,9 +231,10 @@ GridMind/
 │   ├── ejecutar_escenarios_ieee14.py # (histórico — actualizar import a escenarios.py)
 │   ├── probar_escenarios_genericos.py # Prueba de escenarios genéricos
 │   ├── sensibilidad_cortocircuito.py # Sensibilidad al supuesto de S_cc
+│   ├── sensibilidad_frontera.py    # Dos representaciones de las interconexiones
 │   └── procesar_datos.py           # Procesamiento de datos CR
 │
-└── logs/                       # Sesiones y logs de validación
+└── logs/                       # Sesiones (HTML) y logs de validación (JSON)
 
 ```
 
@@ -237,14 +252,18 @@ La validación cruzada compara las respuestas del agente contra cálculos direct
 
 El arnés corre 9 consultas: 3 escenarios CR × 3 preguntas (resumen, violaciones de tensión, sobrecargas), y produce 96 chequeos en tres niveles.
 
-| Nivel | Qué verifica | Pre-mitigación | Post-mitigación |
-|---|---|---|---|
-| Tool | ¿Llamó las herramientas correctas, con los argumentos correctos? | 17/18 | 18/18 (100%) |
-| Data | ¿Los números coinciden con PandaPower? | 54/54 | 54/54 (100%) |
-| Response | ¿La respuesta final refleja los datos? | 24/24 | 24/24 (100%) |
-| **Total** | | **95/96 (98.96%)** | **96/96 (100%)** |
+| Nivel | Qué verifica | Pre-mitigación | Post-mitigación | Versión 1.4.1 |
+|---|---|---|---|---|
+| Tool | ¿Llamó las herramientas correctas, con los argumentos correctos? | 17/18 | 18/18 | 18/18 |
+| Data | ¿Los números coinciden con PandaPower? | 54/54 | 54/54 | 54/54 |
+| Response | ¿La respuesta final refleja los datos? | 24/24 | 24/24 | 24/24 |
+| **Total** | | **95/96 (98.96%)** | **96/96 (100%)** | **96/96 (100%)** |
 
-Los dos resultados son reproducibles sin API key, porque la validación se corre sobre los logs de las baterías ya ejecutadas: `logs/log_bateria_v1.json` (pre) y `logs/log_bateria_v2.json` (post). Las salidas quedan en `logs/log_validacion.json` y `logs/log_validacion_v2.json`.
+Los tres resultados son reproducibles sin API key, porque la validación se corre sobre los logs de las baterías ya ejecutadas: `logs/log_bateria_v1.json`, `logs/log_bateria_v2.json` y `logs/log_bateria_v3.json` (20 de octubre de 2026, 0.57 USD). Las salidas quedan en `logs/log_validacion_v1.json`, `log_validacion_v2.json` y `log_validacion_v3.json`. La referencia la calcula `tests/ground_truth.py` con el mismo cargador que usa el agente (backups de los Excel, nunca los originales).
+
+### Banco de consultas
+
+Además de la batería, un banco de 21 consultas (6 sobre IEEE_14 e IEEE_118 y 15 sobre los tres escenarios CR: resumen, violaciones de tensión, cargabilidad, contingencia N-1, cortocircuito y comparación entre escenarios) se ejecutó como sesión completa cuatro veces, sobre las versiones 1.3.0, 1.3.1, 1.4.0 y 1.4.1. Las sesiones están en `logs/sesion_2026-10-19_1456.html`, `sesion_2026-10-19_1611.html`, `sesion_2026-10-19_1736.html` y `sesion_2026-10-20_0054.html`. Las tres primeras contienen los errores que motivaron cada corrección (respuestas sin herramienta con barras inexistentes; carga equivocada modificada); en la cuarta todas las cifras de herramienta coinciden con PandaPower. Los HTML listan las herramientas invocadas pero no sus argumentos, que solo se ven en la consola.
 
 ### Hallazgo: threshold drift
 
@@ -265,8 +284,20 @@ El detalle metodológico importa: la falla aparece únicamente en el nivel **too
 - **Potencia de cortocircuito de las interconexiones**: no está en el modelo de origen y se trata como parámetro declarado. Su efecto es local (ver el análisis de sensibilidad).
 - **Tensiones CR fuera de rango**: la red CR opera con tensiones que violan el rango estándar. Esto es una propiedad del modelo y se documenta como limitación reconocida.
 - **Sin memoria entre sesiones**: el historial vive solo mientras la sesión está abierta y cubre las últimas 4 consultas. Al cerrar `main.py` se pierde; el registro exportado con `/guardar` queda, pero no se recarga.
-- **Determinismo del LLM**: las respuestas del agente no son 100% determinísticas. La validación de umbrales (3 capas) y la validación cruzada periódica mitigan este riesgo.
+- **Determinismo del LLM**: las respuestas del agente no son determinísticas ni con temperatura 0 (la misma consulta se resolvió bien en tres corridas y mal en una). Las salvaguardas en código reducen el efecto sobre las cifras; la presentación (orden de listas combinadas, inferencias sobre nombres) todavía depende del modelo.
+- **Resumen del flujo**: `run_power_flow` calcula la cargabilidad máxima de transformadores solo sobre los de dos devanados y no expresa las barras sin resultado de una contingencia como carga no servida. `get_overloaded_lines` sí cubre los de tres devanados.
 - **Archivo Max hardcoded**: `red_cr.py` tiene hardcoded el nombre `Base_CR_Max_2023-Marzo.xlsx`. El loader (`red_cr_loader.py`) maneja esto con backup permanente y restauración automática. No borrar `_Backup_Max_2023-Marzo.xlsx`.
+
+## Historial de versiones
+
+| Versión | Revisión | Cambios |
+|---|---|---|
+| 1.3.0 | `ae4cd1a` | Cortocircuito IEC 60909 (`datos_cortocircuito.py`, `run_short_circuit`), scripts de sensibilidad, tests |
+| 1.3.1 | `a97c681` | Regla de historial en el prompt, unidades de desviación, nombres de subestación en `get_voltage_violations` |
+| 1.4.0 | `fe17d9b` | `modify_load` por barra y factor de escala, temperatura 0, reglas de protocolo y formato |
+| 1.4.1 | `3ecdcc3` | Salvaguarda del lazo contra respuestas con cifras sin herramienta; regla de procedencia de cifras |
+
+Los registros de las corridas se publicaron en las revisiones `2cf0b91`, `446d485` y `875b00f`.
 
 ## Autor
 
