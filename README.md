@@ -182,13 +182,13 @@ El error es silencioso en flujo de carga, porque `runpp` no usa `xdss_pu`. Se vu
 - **Temperatura final de conductor (caso mínimo):** 80 °C. Entre 20 y 120 °C la corriente máxima varía 0.03 %.
 - **Interconexiones:** `red_cr.py` modela las conexiones con Nicaragua y Panamá como cinco fuentes ideales en barras que el modelo original clasifica como barras pasivas. Su potencia de cortocircuito se expone como parámetro (2000 MVA y R/X = 0.1 por defecto, supuestos sin respaldo en datos públicos). `scripts/sensibilidad_cortocircuito.py` cuantifica el efecto: variar el supuesto de 500 a 20 000 MVA cambia la corriente media en las barras de interconexión de 6.5 a 76.9 kA, pero mueve la mediana del resto de la red solo un 3.1 %.
 
-Los scripts de sensibilidad usan `pandas.DataFrame.to_markdown`, que requiere el paquete `tabulate` (`pip install tabulate`); escriben su tabla en un `.xlsx` antes de imprimirla.
+Los scripts de sensibilidad escriben su tabla en un `.xlsx` y la imprimen con `pandas.DataFrame.to_markdown`, que requiere el paquete `tabulate` (incluido en `requirements.txt` y `environment.yml`).
 
 ## Escenarios de validación
 
 `escenarios.py` genera automáticamente 4 escenarios estándar (ORIGINAL, BASE, SUBTENSIÓN, SOBRECARGA) para cualquiera de las 15 redes IEEE, con ground truth calculado directamente desde PandaPower. Además incluye 7 escenarios curados (E1-E7) diseñados a mano para IEEE 14 y Costa Rica.
 
-De las 15 redes IEEE, 9 producen los 4 escenarios viables; IEEE 145 y 300 fallan por problemas estructurales de tensión en sus parámetros de fábrica (no son bugs de GridMind).
+De las 15 redes IEEE, 9 producen los 4 escenarios viables (IEEE 4, 6, 14, 24 RTS, 30, 57, 89 PEGASE, 118 y 200). En IEEE 5, 9 y 33 BW la heurística de subtensión no induce violaciones y el escenario se marca como no viable; en IEEE 39 y 300 la contingencia de sobrecarga no converge; en IEEE 145 no convergen ni subtensión ni sobrecarga. Son propiedades de los parámetros de fábrica de esas redes, no errores de GridMind (`scripts/probar_escenarios_genericos.py` reproduce la tabla).
 
 ## Estructura del proyecto
 
@@ -292,7 +292,7 @@ El detalle metodológico importa: la falla aparece únicamente en el nivel **too
 
 | Versión | Revisión | Cambios |
 |---|---|---|
-| 1.3.0 | `ae4cd1a` | Cortocircuito IEC 60909 (`datos_cortocircuito.py`, `run_short_circuit`), scripts de sensibilidad, tests |
+| 1.3.0 | `ae4cd1a` (el mensaje del commit dice v1.2; `main.py` declara 1.3.0) | Cortocircuito IEC 60909 (`datos_cortocircuito.py`, `run_short_circuit`), scripts de sensibilidad, tests |
 | 1.3.1 | `a97c681` | Regla de historial en el prompt, unidades de desviación, nombres de subestación en `get_voltage_violations` |
 | 1.4.0 | `fe17d9b` | `modify_load` por barra y factor de escala, temperatura 0, reglas de protocolo y formato |
 | 1.4.1 | `3ecdcc3` | Salvaguarda del lazo contra respuestas con cifras sin herramienta; regla de procedencia de cifras |
