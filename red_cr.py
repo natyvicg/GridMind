@@ -36,81 +36,8 @@ def Z_base(bus):
 
 
 
-barras_que_hay_que_regular = {
-50562: [2,18],
-50658: [2,18],
-50766: [2,18],
-53208: [2,15],
-50812: [2,21],
-53510: [2,16],
-54058: [2,21],
-54758: [2,22],
-58208: [2,21],
-58310: [2,20],
-53408: [2,17],
-53710 : [2,21],
-58214 : [2,16],
-50108 : [2,19],
-50208 : [2,19],
-50259 : [2,23],
-50260 : [2,23],
-50262: [2,23],
-50358: [2,20],
-50360: [2,20],
-50408: [2,19],
-50662: [2,19],
-50664: [2,19],
-
-50671: [6,18],
-50672: [6,18],
-50673: [6,18],
-50816: [6,18],
-51110: [2,19],
-51112: [2,20],
-51262: [5,19],
-51264: [5,19],
-52008: [4,22],
-52009: [4,22],
-53008: [2,17],
-53010: [2,20],
-53012: [2,20],
-53058: [2,19],
-53108: [2,19],
-53109: [2,19],
-53110: [2,19],
-53112: [2,20],
-53113: [2,20],
-53160: [2,20],
-53258: [2,20],
-53260: [2,20],
-53308: [2,21],
-53310: [2,20],
-53410: [2,19],
-53608: [2,20],
-53658: [2,19],
-53708: [2,17],
-53764: [2,20],
-54060: [2,20],
-54062: [2,20],
-54108: [2,21],
-54208: [2,19],
-54210: [2,19],
-54760: [2,20],
-54858: [2,20],
-54860: [2,20],
-56008: [2,21],
-56010: [2,19],
-56060: [2,19],
-58160: [2,19],
-58210: [2,19],
-58212: [2,19],
-50808: [2,20],
-50814: [2,20],
-50815: [2,20],
-
-
-}
-
+# (Se elimino el diccionario barras_que_hay_que_regular: las posiciones de tap
+#  se leen ahora del archivo de origen, columnas WINDV1/WINDV2/WINDV3.)
 
 # BARRAS
 buses = {}
@@ -140,20 +67,18 @@ prop_bus = Red_CR1.bus
 #CARGAS
 for i in range(1, len(base_datos['Load Data'])):
     barra = int(buses[str(datos_elem('Load Data', i, 0))])
-    
-    if barra in [50562,50658,50766]:
-        signo = -1 
-    else:
-        signo = 1
-        
-    
+
+    # Correccion: antes se invertia el signo de las cargas de las barras
+    # 50562, 50658 y 50766. El archivo de origen ya trae cargas con signo
+    # negativo donde corresponde (generacion embebida), asi que todas las
+    # cargas se toman con el signo con que vienen.
     pp.create_load(Red_CR1, bus = barra,
-                   p_mw = signo*float(datos_elem('Load Data', i, 5)),
-                   q_mvar= signo*float(datos_elem('Load Data', i, 6)),
+                   p_mw = float(datos_elem('Load Data', i, 5)),
+                   q_mvar= float(datos_elem('Load Data', i, 6)),
                    sn_mva=None, 
                    name=None, scaling=1.0, index=None, 
                    in_service=int(datos_elem('Load Data', i, 2)),
-                   type='wye',#PREGUNTAR !!!!!!
+                   type='wye',
                    max_p_mw=None, min_p_mw=None, max_q_mvar=None,
                    min_q_mvar=None, controllable=None)
 
@@ -251,188 +176,138 @@ prop_switch = Red_CR1.switch
 
 
 #trafos 2w
+#
+# Convenciones del archivo de origen (PSS/E v33 RAW, exportado a Excel):
+#   CW = 1: las relaciones de devanado WINDV1 y WINDV2 estan en pu de la
+#           tension base de la barra a la que se conecta cada devanado.
+#   CZ = 1: R1-2 y X1-2 estan en pu sobre la base del sistema (100 MVA).
+# pandapower pide vk_percent referido a la potencia nominal sn_mva del
+# transformador, de modo que vk% = X1-2[pu, 100 MVA] * sn_mva.
+# La relacion de transformacion fuera de la nominal (WINDV1/WINDV2) se
+# representa con un tap en el lado de alta de un solo paso, cuyo tamano
+# es exactamente esa relacion. Para los transformadores con control de
+# tension (COD1 = 1) el archivo trae la posicion de tap con la que PSS/E
+# resolvio el caso, asi que el modelo reproduce el estado resuelto.
 
 for i in range(1, len(base_datos['Trafos'])):
-    
 
-    vn_hv = None
-    vn_lv = None
-    
-    if float(datos_elem('Trafos', i, 25)) == 0.000:
-        vn_hv = Red_CR1.bus.loc[buses[str(datos_elem('Trafos', i, 0)).strip()], 'vn_kv']
-    else:
-        vn_hv = float(datos_elem('Trafos', i, 25))
-    
-    
-    if float(datos_elem('Trafos', i, 42)) == 0.000:
-        vn_lv = Red_CR1.bus.loc[buses[str(datos_elem('Trafos', i, 1)).strip()], 'vn_kv']
-    else:
-        vn_lv = float(datos_elem('Trafos', i, 42))
-    
+    hv_bus = int(buses[str(datos_elem('Trafos', i, 0)).strip()])
+    lv_bus = int(buses[str(datos_elem('Trafos', i, 1)).strip()])
 
-    tap_side = None
-    
-    if str(datos_elem('Trafos', i, 31)).strip() == str(datos_elem('Trafos', i, 0)).strip():
-        tap_side = 'hv'
-    elif  str(datos_elem('Trafos', i, 31)).strip() == str(datos_elem('Trafos', i, 1)).strip():
-        tap_side = 'lv'
-    else:
-        tap_side = None
-    
-    tap_max = int(datos_elem('Trafos', i, 36))
-    tap_neutral = int((tap_max - 2)/2)
-    tap_pos = tap_neutral + 2
-    
-    sn=float(datos_elem('Trafos', i, 27))
-    pu = float(datos_elem('Trafos', i, 22))
+    # Con CW = 1 las tensiones nominales de los devanados son las bases
+    # de las barras; la relacion WINDV1/WINDV2 lleva todo el desfase.
+    vn_hv = float(Red_CR1.bus.loc[hv_bus, 'vn_kv'])
+    vn_lv_barra = float(Red_CR1.bus.loc[lv_bus, 'vn_kv'])
 
-    
-    barra_lv = int(buses[str(datos_elem('Trafos', i, 1)).strip()])
-    if barra_lv in barras_que_hay_que_regular.keys():
-        tap_pos = barras_que_hay_que_regular[barra_lv][0]
-    else:
-        tap_pos = 2
-    
+    sn = float(datos_elem('Trafos', i, 27))            # Rate 1 (RATA1), MVA
+    r12 = float(datos_elem('Trafos', i, 21))           # R1-2, pu sobre 100 MVA
+    x12 = float(datos_elem('Trafos', i, 22))           # X1-2, pu sobre 100 MVA
+    windv1 = float(datos_elem('Trafos', i, 24))        # WINDV1, pu de la base de la barra
+    windv2 = float(datos_elem('Trafos', i, 41))        # WINDV2, pu de la base de la barra
+    if windv1 == 0.0:
+        windv1 = 1.0
+    if windv2 == 0.0:
+        windv2 = 1.0
+
+    # Cambio de base: pu sobre 100 MVA -> por ciento sobre sn
+    vkr = r12 * sn
+    vk = max((r12**2 + x12**2) ** 0.5 * sn, 0.01)
+
+    # WINDV1 va como tap en el lado de alta; WINDV2 (igual a 1 en todos los
+    # transformadores de este archivo) va en la tension nominal del devanado
+    # de baja, que es como pandapower representa la relacion de ese lado.
+    relacion = windv1
+    vn_lv = vn_lv_barra * windv2
     pp.create_transformer_from_parameters(Red_CR1,
-                                          hv_bus = int(buses[str(datos_elem('Trafos', i, 0)).strip()]), 
-                                          lv_bus = barra_lv, 
+                                          hv_bus = hv_bus, 
+                                          lv_bus = lv_bus, 
                                           sn_mva = sn, 
                                           vn_hv_kv = vn_hv, 
                                           vn_lv_kv = vn_lv, 
-                                          vkr_percent = 0, 
-                                          vk_percent = pu*100 if pu*100 < 50 else 14.99,  #float(datos_elem('Trafos', i, 22))*100,
+                                          vkr_percent = vkr, 
+                                          vk_percent = vk,
                                           pfe_kw = 0, 
                                           i0_percent=0,
-
-                                          tap_side = tap_side,
-                                          tap_neutral = 3, 
-                                          tap_max= 6, 
-                                          tap_min=1, 
-                                          tap_step_percent=2.5, 
-                                          #tap_step_degree=None, 
-                                          tap_pos= tap_pos,
-                                          tap_changer_type= 'Ratio',
-                                          #tap_phase_shifter=False, 
+                                          tap_side = 'hv',
+                                          tap_neutral = 0, 
+                                          tap_max = 1, 
+                                          tap_min = -1, 
+                                          tap_step_percent = (relacion - 1.0) * 100.0, 
+                                          tap_pos = 1,
+                                          tap_changer_type = 'Ratio',
                                           in_service=int(datos_elem('Trafos', i, 11)), 
                                           name = datos_elem('Trafos', i, 10), 
                                           index=None, 
-                                          #max_loading_percent=None, 
-                                          #parallel=1, df=1.0,
-                                          #vector_group = str(datos_elem('Trafos', i, 20)).replace("'"," ").strip(),
                                           )
 
-
-
 prop_trafo2w = Red_CR1.trafo
-
-
-def tap(df, columna,i):
-    
-    tap_side = None
-    
-    if str(datos_elem(df, i, columna)).strip() == str(datos_elem(df, i, 0)).strip():
-        tap_side = 'hv'
-    elif  str(datos_elem(df, i, columna)).strip() == str(datos_elem(df, i, 1)).strip():
-        tap_side = 'mv'
-    elif  str(datos_elem(df, i, columna)).strip() == str(datos_elem(df, i, 2)).strip():
-        tap_side = 'lv'    
-    return tap_side
-
 #trafos 3W
+#
+# Mismas convenciones (CW = 1, CZ = 1). pandapower refiere cada tension de
+# cortocircuito de un transformador de tres devanados a la menor de las dos
+# potencias nominales de los devanados que une (build_branch.z_br_to_bus_vector):
+#   vk_hv% = X1-2 * min(sn_hv, sn_mv)
+#   vk_mv% = X2-3 * min(sn_mv, sn_lv)
+#   vk_lv% = X3-1 * min(sn_hv, sn_lv)
+# La relacion WINDV1 del devanado de alta se representa con el tap de un
+# paso; WINDV2 y WINDV3 (distintas de 1 en seis casos) se representan con
+# la tension nominal del devanado.
 
 for i in range(1, len(base_datos['Trafos 3W'])):
-    
-   
-    vn_hv = None
-    vn_lv = None
-    vn_mv = None
-    tap_pos = None
-    tap_side = None
-    
-    for j in range(3):
-        
-        if j == 0:
-            tap_side = tap('Trafos 3W',39,i)
-        elif j == 1:
-            tap_side = tap('Trafos 3W',56,i)
-        elif j == 2:
-            tap_side = tap('Trafos 3W',73,i)
-        
-        if tap_side != None:
-            break
-     
 
-    if tap_side == 'hv':
-        tap_max = float(datos_elem('Trafos 3W', i, 44))
-    elif tap_side == 'mv':
-        tap_max = float(datos_elem('Trafos 3W', i, 61))
-    elif tap_side == 'lv':
-        tap_max = float(datos_elem('Trafos 3W', i, 78))
-    
-    tap_neutral = None
-    tap_pos = None
-    if tap_side:
-        tap_neutral = int((tap_max-2)/2)
-        tap_pos = tap_neutral + 2
-        
-    
-    
-    if float(str(datos_elem('Trafos 3W', i, 33)).strip()) == 0.000:
-        vn_hv = Red_CR1.bus.loc[buses[str(datos_elem('Trafos 3W', i, 0)).strip()], 'vn_kv']
-    else:
-        vn_hv = float(str(datos_elem('Trafos 3W', i, 33)).strip())
-    
-    
-    if float(str(datos_elem('Trafos 3W', i, 50)).strip()) == 0.000:
-        vn_mv = Red_CR1.bus.loc[buses[str(datos_elem('Trafos 3W', i, 1)).strip()], 'vn_kv']
-    else:
-        vn_mv = float(str(datos_elem('Trafos 3W', i, 50)).strip())
-        
-    if float(str(datos_elem('Trafos 3W', i, 67)).strip()) == 0.000:
-        vn_lv = Red_CR1.bus.loc[buses[str(datos_elem('Trafos 3W', i, 2)).strip()], 'vn_kv']
-    else:
-        vn_lv = float(str(datos_elem('Trafos 3W', i, 67)).strip())
-    
-    sn1=float(datos_elem('Trafos 3W', i, 35))
-    sn2=float(datos_elem('Trafos 3W', i, 52))
-    sn3=float(datos_elem('Trafos 3W', i, 69))
-    pu1 = float(datos_elem('Trafos 3W', i, 22))
-    pu2 = float(datos_elem('Trafos 3W', i, 25))
-    pu3 = float(datos_elem('Trafos 3W', i, 28))
-    
-    barra_mv = int(buses[str(datos_elem('Trafos 3W', i, 1)).strip()])
-    if barra_mv in barras_que_hay_que_regular.keys():
-        tap_pos = barras_que_hay_que_regular[barra_mv][1] 
-    else:
-        tap_pos = 18
-        
+    hv_bus = int(buses[str(datos_elem('Trafos 3W', i, 0)).strip()])
+    mv_bus = int(buses[str(datos_elem('Trafos 3W', i, 1)).strip()])
+    lv_bus = int(buses[str(datos_elem('Trafos 3W', i, 2)).strip()])
+
+    sn_hv = float(str(datos_elem('Trafos 3W', i, 37)).strip())
+    sn_mv = float(str(datos_elem('Trafos 3W', i, 54)).strip())
+    sn_lv = float(str(datos_elem('Trafos 3W', i, 71)).strip())
+
+    r12 = float(datos_elem('Trafos 3W', i, 21)); x12 = float(datos_elem('Trafos 3W', i, 22))
+    r23 = float(datos_elem('Trafos 3W', i, 24)); x23 = float(datos_elem('Trafos 3W', i, 25))
+    r31 = float(datos_elem('Trafos 3W', i, 27)); x31 = float(datos_elem('Trafos 3W', i, 28))
+
+    windv1 = float(str(datos_elem('Trafos 3W', i, 32)).strip()) or 1.0
+    windv2 = float(str(datos_elem('Trafos 3W', i, 49)).strip()) or 1.0
+    windv3 = float(str(datos_elem('Trafos 3W', i, 66)).strip()) or 1.0
+
+    vn_hv = float(Red_CR1.bus.loc[hv_bus, 'vn_kv'])
+    vn_mv = float(Red_CR1.bus.loc[mv_bus, 'vn_kv']) * windv2
+    vn_lv = float(Red_CR1.bus.loc[lv_bus, 'vn_kv']) * windv3
+
+    def _vk(r, x, s):
+        return max((r**2 + x**2) ** 0.5 * s, 0.01)
+
     pp.create_transformer3w_from_parameters(Red_CR1, 
-                                            hv_bus = int(buses[str(datos_elem('Trafos 3W', i, 0)).strip()]), 
-                                            mv_bus = int(buses[str(datos_elem('Trafos 3W', i, 1)).strip()]), 
-                                            lv_bus = int(buses[str(datos_elem('Trafos 3W', i, 2)).strip()]), 
+                                            hv_bus = hv_bus, 
+                                            mv_bus = mv_bus, 
+                                            lv_bus = lv_bus, 
                                             vn_hv_kv = vn_hv, 
                                             vn_mv_kv = vn_mv, 
                                             vn_lv_kv = vn_lv, 
-                                            sn_hv_mva = float(str(datos_elem('Trafos 3W', i, 37)).strip()), 
-                                            sn_mv_mva =float(str(datos_elem('Trafos 3W', i, 54)).strip()), 
-                                            sn_lv_mva = float(str(datos_elem('Trafos 3W', i, 71)).strip()), 
-                                            vk_hv_percent = pu1*100, 
-                                            vk_mv_percent = pu2*100, 
-                                            vk_lv_percent = pu3*100, 
-                                            vkr_hv_percent = 0.0, 
-                                            vkr_mv_percent = 0.0, 
-                                            vkr_lv_percent = 0.0, 
+                                            sn_hv_mva = sn_hv, 
+                                            sn_mv_mva = sn_mv, 
+                                            sn_lv_mva = sn_lv, 
+                                            vk_hv_percent = _vk(r12, x12, min(sn_hv, sn_mv)), 
+                                            vk_mv_percent = _vk(r23, x23, min(sn_mv, sn_lv)), 
+                                            vk_lv_percent = _vk(r31, x31, min(sn_hv, sn_lv)), 
+                                            vkr_hv_percent = r12 * min(sn_hv, sn_mv), 
+                                            vkr_mv_percent = r23 * min(sn_mv, sn_lv), 
+                                            vkr_lv_percent = r31 * min(sn_hv, sn_lv), 
                                             pfe_kw = 0, 
                                             i0_percent = 0, 
-                                            shift_mv_degree= float(str(datos_elem('Trafos 3W', i, 51)).strip()), 
-                                            shift_lv_degree= float(str(datos_elem('Trafos 3W', i, 68)).strip()), 
-                                            tap_side= tap_side, 
-                                            tap_step_percent = 2.5, 
-                                            tap_step_degree = None, 
-                                            tap_pos = tap_pos, 
-                                            tap_neutral=17, 
-                                            tap_max = 33, 
-                                            tap_min = 1, 
+                                            # Desfases: PSS/E da el angulo de cada devanado respecto del punto
+                                            # estrella (ANG1, ANG2, ANG3); pandapower pide el atraso de mv y de lv
+                                            # respecto de hv, es decir ANG1 - ANG2 y ANG1 - ANG3.
+                                            shift_mv_degree= float(str(datos_elem('Trafos 3W', i, 34)).strip()) - float(str(datos_elem('Trafos 3W', i, 51)).strip()), 
+                                            shift_lv_degree= float(str(datos_elem('Trafos 3W', i, 34)).strip()) - float(str(datos_elem('Trafos 3W', i, 68)).strip()), 
+                                            tap_side = 'hv', 
+                                            tap_step_percent = (windv1 - 1.0) * 100.0, 
+                                            tap_step_degree = 0.0, 
+                                            tap_pos = 1, 
+                                            tap_neutral = 0, 
+                                            tap_max = 1, 
+                                            tap_min = -1, 
                                             tap_changer_type= 'Ratio',
                                             name = str(datos_elem('Trafos 3W', i, 10)), 
                                             in_service = int(datos_elem('Trafos 3W', i, 11)), 
@@ -452,7 +327,10 @@ for i in range(1, len(base_datos['Switched Shunt Data'])):
     else:
         signo = -1
     pp.create.create_shunt(Red_CR1, bus = barra,
-                           q_mvar = signo*datos_elem('Switched Shunt Data', i, 11),
+                           # Correccion: se usa BINIT (columna 9, Mvar conectados en el caso
+                           # resuelto) y no B1 (columna 11, tamano del bloque). Signo: en PSS/E
+                           # B positivo es capacitivo; en pandapower q_mvar positivo es inductivo.
+                           q_mvar = signo*float(datos_elem('Switched Shunt Data', i, 9)),
                            p_mw=0.0, 
                            vn_kv=None,
                            step= float(datos_elem('Switched Shunt Data', i, 10).replace("'"," ").strip()),
@@ -471,11 +349,21 @@ with pd.ExcelWriter('Elements.xlsx') as writer:
    # prop_trafo3w.to_excel(writer, sheet_name= 'Trafo3w', index = False)
     '''
 
-pp.create.create_ext_grid(Red_CR1, bus = 50000, vm_pu=1.0, va_degree=0.0, name='Nicaragua 1', in_service=True)
-pp.create.create_ext_grid(Red_CR1, bus = 50050, vm_pu=1.0, va_degree=0.0, name='Nicaragua 2', in_service=True)
-pp.create.create_ext_grid(Red_CR1, bus = 56050, vm_pu=1.0, va_degree=0.0, name='Panama 1', in_service=True)
-pp.create.create_ext_grid(Red_CR1, bus = 58350, vm_pu=1.0, va_degree=0.0, name='Panama 2', in_service=True)
-pp.create.create_ext_grid(Red_CR1, bus = 56052, vm_pu=1.0, va_degree=0.0, name='Panama 3', in_service=True)
+# Fuentes ideales en las cinco barras de frontera (representacion A,
+# seccion 3.3.3 del informe). Correccion: la tension y el angulo de cada
+# fuente se toman de la solucion que trae el archivo de origen para esa
+# barra (columnas 'Voltage (pu)' y 'Angle (deg)' de Bus Data), en lugar de
+# 1,0 pu y 0 grados fijos.
+_bus_data = base_datos['Bus Data']
+def _v_angulo_archivo(barra):
+    fila = _bus_data[_bus_data.iloc[:, 0].astype(str).str.strip() == str(barra)]
+    return float(fila.iloc[0, 7]), float(fila.iloc[0, 8])
+
+for _barra, _nombre in [(50000, 'Nicaragua 1'), (50050, 'Nicaragua 2'),
+                        (56050, 'Panama 1'), (58350, 'Panama 2'), (56052, 'Panama 3')]:
+    _v, _ang = _v_angulo_archivo(_barra)
+    pp.create.create_ext_grid(Red_CR1, bus = _barra, vm_pu=_v, va_degree=_ang,
+                              name=_nombre, in_service=True)
 #56052
 
 #islas = list(pp.topology.unsupplied_buses(Red_CR1))
@@ -578,7 +466,7 @@ if not Red_CR1.res_trafo.empty:
 if not Red_CR1.res_trafo3w.empty:
     print(f"Trafo3W loading max={Red_CR1.res_trafo3w.loading_percent.max():.2f}%")
 
-idx = [float(b) for b in barras_que_hay_que_regular.keys()]
+# (linea eliminada: usaba barras_que_hay_que_regular)
 
 
 '''
