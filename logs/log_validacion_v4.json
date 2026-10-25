@@ -1,0 +1,798 @@
+{
+  "n_chequeos": 66,
+  "n_coinciden": 66,
+  "porcentaje_coincidencia": 100.0,
+  "por_nivel": {
+    "tool": {
+      "total": 18,
+      "coinciden": 18,
+      "pct": 100.0
+    },
+    "data": {
+      "total": 27,
+      "coinciden": 27,
+      "pct": 100.0
+    },
+    "response": {
+      "total": 21,
+      "coinciden": 21,
+      "pct": 100.0
+    }
+  },
+  "chequeos": [
+    {
+      "nivel": "tool",
+      "escenario": "CR_Min",
+      "consulta": "Q1_resumen",
+      "metrica": "tools_usadas",
+      "valor_agente": [
+        "run_power_flow"
+      ],
+      "valor_ground_truth": [
+        "run_power_flow"
+      ],
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Min",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.converged",
+      "valor_agente": true,
+      "valor_ground_truth": true,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Min",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.n_buses",
+      "valor_agente": 524,
+      "valor_ground_truth": 524,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Min",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.n_buses_with_result",
+      "valor_agente": 513,
+      "valor_ground_truth": 513,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Min",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.v_min_pu",
+      "valor_agente": 0.9696822696623648,
+      "valor_ground_truth": 0.9696822696623648,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Min",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.v_max_pu",
+      "valor_agente": 1.0444345404314412,
+      "valor_ground_truth": 1.0444345404314412,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Min",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.max_line_loading_percent",
+      "valor_agente": 74.39250953595317,
+      "valor_ground_truth": 74.39250953595317,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Min",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene v_min_pu",
+      "valor_agente": "presente",
+      "valor_ground_truth": 0.9696822696623648,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Min",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene v_max_pu",
+      "valor_agente": "presente",
+      "valor_ground_truth": 1.0444345404314412,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Min",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene max_line_loading_percent",
+      "valor_agente": "presente",
+      "valor_ground_truth": 74.39250953595317,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Min",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene n_buses",
+      "valor_agente": "presente",
+      "valor_ground_truth": 524.0,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Min",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene n_buses_with_result",
+      "valor_agente": "presente",
+      "valor_ground_truth": 513.0,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Min",
+      "consulta": "Q2_subtensiones",
+      "metrica": "tools_usadas",
+      "valor_agente": [
+        "run_power_flow",
+        "get_voltage_violations"
+      ],
+      "valor_ground_truth": [
+        "run_power_flow",
+        "get_voltage_violations"
+      ],
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Min",
+      "consulta": "Q2_subtensiones",
+      "metrica": "get_voltage_violations.v_min",
+      "valor_agente": null,
+      "valor_ground_truth": 0.95,
+      "delta": null,
+      "coincide": true,
+      "nota": "El agente OMITIÓ el parámetro v_min (= usa default 0.95). Comportamiento correcto."
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Min",
+      "consulta": "Q2_subtensiones",
+      "metrica": "get_voltage_violations.v_max",
+      "valor_agente": null,
+      "valor_ground_truth": 1.05,
+      "delta": null,
+      "coincide": true,
+      "nota": "El agente OMITIÓ el parámetro v_max (= usa default 1.05). Comportamiento correcto."
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Min",
+      "consulta": "Q2_subtensiones",
+      "metrica": "get_voltage_violations.n_subtension",
+      "valor_agente": 0,
+      "valor_ground_truth": 0,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Min",
+      "consulta": "Q2_subtensiones",
+      "metrica": "get_voltage_violations.top5_subtension_vacia",
+      "valor_agente": 0,
+      "valor_ground_truth": 0,
+      "delta": null,
+      "coincide": true,
+      "nota": "La referencia no tiene subtensiones; se verifica que la lista del agente esté vacía."
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Min",
+      "consulta": "Q2_subtensiones",
+      "metrica": "final_text contiene n_subtension",
+      "valor_agente": "presente",
+      "valor_ground_truth": 0.0,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Min",
+      "consulta": "Q3_sobrecargas",
+      "metrica": "tools_usadas",
+      "valor_agente": [
+        "run_power_flow",
+        "get_overloaded_lines"
+      ],
+      "valor_ground_truth": [
+        "run_power_flow",
+        "get_overloaded_lines"
+      ],
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Min",
+      "consulta": "Q3_sobrecargas",
+      "metrica": "get_overloaded_lines.loading_threshold",
+      "valor_agente": null,
+      "valor_ground_truth": 100,
+      "delta": null,
+      "coincide": true,
+      "nota": "El agente OMITIÓ el parámetro loading_threshold (= usa default 100). Comportamiento correcto."
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Min",
+      "consulta": "Q3_sobrecargas",
+      "metrica": "get_overloaded_lines.n_overloads",
+      "valor_agente": 0,
+      "valor_ground_truth": 0,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Min",
+      "consulta": "Q3_sobrecargas",
+      "metrica": "final_text contiene n_overloads",
+      "valor_agente": "presente",
+      "valor_ground_truth": 0.0,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Med",
+      "consulta": "Q1_resumen",
+      "metrica": "tools_usadas",
+      "valor_agente": [
+        "run_power_flow"
+      ],
+      "valor_ground_truth": [
+        "run_power_flow"
+      ],
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Med",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.converged",
+      "valor_agente": true,
+      "valor_ground_truth": true,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Med",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.n_buses",
+      "valor_agente": 524,
+      "valor_ground_truth": 524,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Med",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.n_buses_with_result",
+      "valor_agente": 513,
+      "valor_ground_truth": 513,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Med",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.v_min_pu",
+      "valor_agente": 0.9624327396904085,
+      "valor_ground_truth": 0.9624327396904085,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Med",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.v_max_pu",
+      "valor_agente": 1.0527138762719979,
+      "valor_ground_truth": 1.0527138762719979,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Med",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.max_line_loading_percent",
+      "valor_agente": 56.203795383344,
+      "valor_ground_truth": 56.203795383344,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Med",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene v_min_pu",
+      "valor_agente": "presente",
+      "valor_ground_truth": 0.9624327396904085,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Med",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene v_max_pu",
+      "valor_agente": "presente",
+      "valor_ground_truth": 1.0527138762719979,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Med",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene max_line_loading_percent",
+      "valor_agente": "presente",
+      "valor_ground_truth": 56.203795383344,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Med",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene n_buses",
+      "valor_agente": "presente",
+      "valor_ground_truth": 524.0,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Med",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene n_buses_with_result",
+      "valor_agente": "presente",
+      "valor_ground_truth": 513.0,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Med",
+      "consulta": "Q2_subtensiones",
+      "metrica": "tools_usadas",
+      "valor_agente": [
+        "run_power_flow",
+        "get_voltage_violations"
+      ],
+      "valor_ground_truth": [
+        "run_power_flow",
+        "get_voltage_violations"
+      ],
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Med",
+      "consulta": "Q2_subtensiones",
+      "metrica": "get_voltage_violations.v_min",
+      "valor_agente": null,
+      "valor_ground_truth": 0.95,
+      "delta": null,
+      "coincide": true,
+      "nota": "El agente OMITIÓ el parámetro v_min (= usa default 0.95). Comportamiento correcto."
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Med",
+      "consulta": "Q2_subtensiones",
+      "metrica": "get_voltage_violations.v_max",
+      "valor_agente": null,
+      "valor_ground_truth": 1.05,
+      "delta": null,
+      "coincide": true,
+      "nota": "El agente OMITIÓ el parámetro v_max (= usa default 1.05). Comportamiento correcto."
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Med",
+      "consulta": "Q2_subtensiones",
+      "metrica": "get_voltage_violations.n_subtension",
+      "valor_agente": 0,
+      "valor_ground_truth": 0,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Med",
+      "consulta": "Q2_subtensiones",
+      "metrica": "get_voltage_violations.top5_subtension_vacia",
+      "valor_agente": 0,
+      "valor_ground_truth": 0,
+      "delta": null,
+      "coincide": true,
+      "nota": "La referencia no tiene subtensiones; se verifica que la lista del agente esté vacía."
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Med",
+      "consulta": "Q2_subtensiones",
+      "metrica": "final_text contiene n_subtension",
+      "valor_agente": "presente",
+      "valor_ground_truth": 0.0,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Med",
+      "consulta": "Q3_sobrecargas",
+      "metrica": "tools_usadas",
+      "valor_agente": [
+        "run_power_flow",
+        "get_overloaded_lines"
+      ],
+      "valor_ground_truth": [
+        "run_power_flow",
+        "get_overloaded_lines"
+      ],
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Med",
+      "consulta": "Q3_sobrecargas",
+      "metrica": "get_overloaded_lines.loading_threshold",
+      "valor_agente": null,
+      "valor_ground_truth": 100,
+      "delta": null,
+      "coincide": true,
+      "nota": "El agente OMITIÓ el parámetro loading_threshold (= usa default 100). Comportamiento correcto."
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Med",
+      "consulta": "Q3_sobrecargas",
+      "metrica": "get_overloaded_lines.n_overloads",
+      "valor_agente": 0,
+      "valor_ground_truth": 0,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Med",
+      "consulta": "Q3_sobrecargas",
+      "metrica": "final_text contiene n_overloads",
+      "valor_agente": "presente",
+      "valor_ground_truth": 0.0,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Max",
+      "consulta": "Q1_resumen",
+      "metrica": "tools_usadas",
+      "valor_agente": [
+        "run_power_flow"
+      ],
+      "valor_ground_truth": [
+        "run_power_flow"
+      ],
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Max",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.converged",
+      "valor_agente": true,
+      "valor_ground_truth": true,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Max",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.n_buses",
+      "valor_agente": 524,
+      "valor_ground_truth": 524,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Max",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.n_buses_with_result",
+      "valor_agente": 513,
+      "valor_ground_truth": 513,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Max",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.v_min_pu",
+      "valor_agente": 0.9647165525976795,
+      "valor_ground_truth": 0.9647165525976795,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Max",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.v_max_pu",
+      "valor_agente": 1.0466897022097892,
+      "valor_ground_truth": 1.0466897022097892,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Max",
+      "consulta": "Q1_resumen",
+      "metrica": "run_power_flow.max_line_loading_percent",
+      "valor_agente": 63.43843307512698,
+      "valor_ground_truth": 63.43843307512698,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Max",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene v_min_pu",
+      "valor_agente": "presente",
+      "valor_ground_truth": 0.9647165525976795,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Max",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene v_max_pu",
+      "valor_agente": "presente",
+      "valor_ground_truth": 1.0466897022097892,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Max",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene max_line_loading_percent",
+      "valor_agente": "presente",
+      "valor_ground_truth": 63.43843307512698,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Max",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene n_buses",
+      "valor_agente": "presente",
+      "valor_ground_truth": 524.0,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Max",
+      "consulta": "Q1_resumen",
+      "metrica": "final_text contiene n_buses_with_result",
+      "valor_agente": "presente",
+      "valor_ground_truth": 513.0,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Max",
+      "consulta": "Q2_subtensiones",
+      "metrica": "tools_usadas",
+      "valor_agente": [
+        "run_power_flow",
+        "get_voltage_violations"
+      ],
+      "valor_ground_truth": [
+        "run_power_flow",
+        "get_voltage_violations"
+      ],
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Max",
+      "consulta": "Q2_subtensiones",
+      "metrica": "get_voltage_violations.v_min",
+      "valor_agente": null,
+      "valor_ground_truth": 0.95,
+      "delta": null,
+      "coincide": true,
+      "nota": "El agente OMITIÓ el parámetro v_min (= usa default 0.95). Comportamiento correcto."
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Max",
+      "consulta": "Q2_subtensiones",
+      "metrica": "get_voltage_violations.v_max",
+      "valor_agente": null,
+      "valor_ground_truth": 1.05,
+      "delta": null,
+      "coincide": true,
+      "nota": "El agente OMITIÓ el parámetro v_max (= usa default 1.05). Comportamiento correcto."
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Max",
+      "consulta": "Q2_subtensiones",
+      "metrica": "get_voltage_violations.n_subtension",
+      "valor_agente": 0,
+      "valor_ground_truth": 0,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Max",
+      "consulta": "Q2_subtensiones",
+      "metrica": "get_voltage_violations.top5_subtension_vacia",
+      "valor_agente": 0,
+      "valor_ground_truth": 0,
+      "delta": null,
+      "coincide": true,
+      "nota": "La referencia no tiene subtensiones; se verifica que la lista del agente esté vacía."
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Max",
+      "consulta": "Q2_subtensiones",
+      "metrica": "final_text contiene n_subtension",
+      "valor_agente": "presente",
+      "valor_ground_truth": 0.0,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Max",
+      "consulta": "Q3_sobrecargas",
+      "metrica": "tools_usadas",
+      "valor_agente": [
+        "run_power_flow",
+        "get_overloaded_lines"
+      ],
+      "valor_ground_truth": [
+        "run_power_flow",
+        "get_overloaded_lines"
+      ],
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "tool",
+      "escenario": "CR_Max",
+      "consulta": "Q3_sobrecargas",
+      "metrica": "get_overloaded_lines.loading_threshold",
+      "valor_agente": null,
+      "valor_ground_truth": 100,
+      "delta": null,
+      "coincide": true,
+      "nota": "El agente OMITIÓ el parámetro loading_threshold (= usa default 100). Comportamiento correcto."
+    },
+    {
+      "nivel": "data",
+      "escenario": "CR_Max",
+      "consulta": "Q3_sobrecargas",
+      "metrica": "get_overloaded_lines.n_overloads",
+      "valor_agente": 0,
+      "valor_ground_truth": 0,
+      "delta": 0.0,
+      "coincide": true,
+      "nota": ""
+    },
+    {
+      "nivel": "response",
+      "escenario": "CR_Max",
+      "consulta": "Q3_sobrecargas",
+      "metrica": "final_text contiene n_overloads",
+      "valor_agente": "presente",
+      "valor_ground_truth": 0.0,
+      "delta": null,
+      "coincide": true,
+      "nota": ""
+    }
+  ]
+}

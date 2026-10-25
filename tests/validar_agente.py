@@ -283,6 +283,24 @@ def validar_data_level(corrida, gt):
                 violaciones_agente, key=lambda x: x["vm_pu"]
             )[:5]
 
+        # Caso sin subtensiones en la referencia (modelo verificado contra
+        # PSS/E): comparar diez posiciones vacías contra diez posiciones
+        # vacías no verifica nada. Se registra una sola verificación: que la
+        # lista del agente también esté vacía.
+        if not gt_q["top5"]:
+            chequeos.append({
+                "nivel": "data",
+                "escenario": esc,
+                "consulta": qid,
+                "metrica": "get_voltage_violations.top5_subtension_vacia",
+                "valor_agente": len(violaciones_agente_sorted),
+                "valor_ground_truth": 0,
+                "delta": None,
+                "coincide": len(violaciones_agente_sorted) == 0,
+                "nota": "La referencia no tiene subtensiones; se verifica que la lista del agente esté vacía.",
+            })
+            return chequeos
+
         for i in range(5):
             va = violaciones_agente_sorted[i] if i < len(violaciones_agente_sorted) else None
             vg = gt_q["top5"][i] if i < len(gt_q["top5"]) else None

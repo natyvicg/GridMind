@@ -1,0 +1,267 @@
+{
+  "resultados": [
+    {
+      "escenario": "CR_Min",
+      "consulta_id": "Q1_resumen",
+      "query": "Carga la red CR_Min y dame un resumen del estado: ¿convergió el flujo? ¿cuál es el rango de tensiones (Vmin, Vmax)? ¿cuál es la carga máxima de líneas y de transformadores?",
+      "iterations": 2,
+      "stop_reason": "end_turn",
+      "tool_calls": [
+        {
+          "name": "run_power_flow",
+          "input": {
+            "network": "CR_Min"
+          },
+          "result": "{'network': 'CR_Min', 'converged': True, 'iterations_nr': 4, 'n_buses': 524, 'n_buses_with_result': 513, 'n_lines': 137, 'n_trafos': 256, 'v_min_pu': 0.9696822696623648, 'v_max_pu': 1.0444345404314412, 'max_line_loading_percent': 74.39250953595317, 'max_trafo_loading_percent': 88.00992700292345}"
+        }
+      ],
+      "final_text": "Aquí está el resumen del estado de la red **CR_Min** tras ejecutar el flujo de potencia con Newton-Raphson:\n\n---\n\n## Resumen del flujo de potencia — CR_Min\n\n| Parámetro | Valor |\n|---|---|\n| **Convergencia** | Sí |\n| **Iteraciones Newton-Raphson** | 4 |\n| **Número de barras** | 524 (513 con resultado) |\n| **Número de líneas** | 137 |\n| **Número de transformadores** | 256 |\n\n> **Nota:** Las 11 barras sin resultado corresponden a 3 unidades no despachadas y 8 devanados terciarios desactivados por despacho operativo. Es un comportamiento esperado del modelo.\n\n---\n\n## Perfil de tensiones\n\n| Indicador | Valor (pu) |\n|---|---|\n| **Vmin observado** | 0.9697 pu |\n| **Vmax observado** | 1.0444 pu |\n\nEl perfil de tensiones se mantiene dentro del rango operacional estándar [0.95 – 1.05] pu en términos globales (Vmin y Vmax observados), lo cual es un resultado favorable para el escenario de demanda mínima.\n\n---\n\n## Cargabilidad máxima de elementos serie\n\n| Tipo de elemento | Carga máxima (%) |\n|---|---|\n| **Líneas** | 74.39 % |\n| **Transformadores** | 88.01 % |\n\n---\n\n### Conclusiones\n\n- El flujo **convergió en solo 4 iteraciones**, indicando un buen condicionamiento numérico de la red en este escenario.\n- Ningún elemento supera el 100 % de carga: **no hay sobrecargas** en el estado base de CR_Min.\n- El transformador más cargado llega al **88.01 %**, lo que representa un margen de seguridad reducido (~12 %) ante incrementos de demanda o contingencias.\n- Las líneas tienen mayor holgura, con un máximo de **74.39 %**.\n\nSi desea profundizar, puedo identificar qué barras o elementos específicos presentan las condiciones más críticas (violaciones de tensión, sobrecargas, cortocircuito, etc.).",
+      "usage": {
+        "input_tokens": 12671,
+        "output_tokens": 648
+      },
+      "costo_usd": 0.047733,
+      "elapsed_s": 14.018248558044434,
+      "error": null
+    },
+    {
+      "escenario": "CR_Min",
+      "consulta_id": "Q2_subtensiones",
+      "query": "Para la red CR_Min, ¿cuántas barras presentan violaciones de tensión? Lista las 5 más severas y comenta el patrón si lo hay.",
+      "iterations": 3,
+      "stop_reason": "end_turn",
+      "tool_calls": [
+        {
+          "name": "run_power_flow",
+          "input": {
+            "network": "CR_Min"
+          },
+          "result": "{'network': 'CR_Min', 'converged': True, 'iterations_nr': 4, 'n_buses': 524, 'n_buses_with_result': 513, 'n_lines': 137, 'n_trafos': 256, 'v_min_pu': 0.9696822696623648, 'v_max_pu': 1.0444345404314412, 'max_line_loading_percent': 74.39250953595317, 'max_trafo_loading_percent': 88.00992700292345}"
+        },
+        {
+          "name": "get_voltage_violations",
+          "input": {
+            "limit": 5
+          },
+          "result": "{'network': 'CR_Min', 'v_min_threshold': 0.95, 'v_max_threshold': 1.05, 'n_violations_total': 0, 'n_subtension': 0, 'n_sobretension': 0, 'limit_applied': 5, 'orden': 'por desviación absoluta respecto al umbral violado, de mayor a menor, mezclando subtensiones y sobretensiones', 'violations': [], 'top5_subtension': [], 'top5_sobretension': []}"
+        }
+      ],
+      "final_text": "Los resultados son claros y no requieren herramientas adicionales. A continuación el informe:\n\n---\n\n## Análisis de violaciones de tensión — Red CR_Min\n\n### Resultado del flujo de potencia\n\n| Parámetro | Valor |\n|---|---|\n| Convergencia | Sí |\n| Iteraciones Newton-Raphson | 4 |\n| Barras con resultado | 513 / 524 |\n| V mín. observado | 0.9697 pu |\n| V máx. observado | 1.0444 pu |\n| Carga máx. líneas | 74.39 % |\n| Carga máx. transformadores | 88.01 % |\n\n> **Nota sobre las 11 barras sin resultado:** corresponden a 3 unidades no despachadas y 8 devanados terciarios desactivados por despacho operativo. No representan un problema numérico.\n\n---\n\n### Violaciones de tensión (umbral: 0.95 – 1.05 pu)\n\n**Total de barras con violación: 0**\n\n| Tipo | Cantidad |\n|---|---|\n| Subtensiones (< 0.95 pu) | 0 |\n| Sobretensiones (> 1.05 pu) | 0 |\n\nNo hay barras que violen los límites operacionales estándar en este escenario.\n\n---\n\n### Comentario técnico\n\nEl escenario **CR_Min** (demanda mínima) es el más favorable desde el punto de vista de los perfiles de tensión. Con un rango observado de **0.9697 – 1.0444 pu**, todas las barras con resultado se mantienen dentro de la banda operacional [0.95, 1.05] pu, sin ninguna violación.\n\nEsto es consistente con el comportamiento típico de los sistemas de transmisión en condición de carga mínima: la demanda reducida implica menores caídas de tensión en las líneas y menor consumo de reactivos, lo que favorece perfiles de tensión más planos y dentro de los límites. La carga máxima de transformadores (88 %) y líneas (74 %) también se mantiene por debajo del límite de sobrecarga, confirmando que la red opera holgadamente en este escenario.",
+      "usage": {
+        "input_tokens": 19308,
+        "output_tokens": 731
+      },
+      "costo_usd": 0.06888899999999999,
+      "elapsed_s": 15.334843397140503,
+      "error": null
+    },
+    {
+      "escenario": "CR_Min",
+      "consulta_id": "Q3_sobrecargas",
+      "query": "En la red CR_Min, ¿hay líneas sobrecargadas (cargabilidad mayor a 100%)? Si las hay, lista hasta 5; si no, confírmalo explícitamente.",
+      "iterations": 3,
+      "stop_reason": "end_turn",
+      "tool_calls": [
+        {
+          "name": "run_power_flow",
+          "input": {
+            "network": "CR_Min"
+          },
+          "result": "{'network': 'CR_Min', 'converged': True, 'iterations_nr': 4, 'n_buses': 524, 'n_buses_with_result': 513, 'n_lines': 137, 'n_trafos': 256, 'v_min_pu': 0.9696822696623648, 'v_max_pu': 1.0444345404314412, 'max_line_loading_percent': 74.39250953595317, 'max_trafo_loading_percent': 88.00992700292345}"
+        },
+        {
+          "name": "get_overloaded_lines",
+          "input": {
+            "limit": 5
+          },
+          "result": "{'network': 'CR_Min', 'loading_threshold_percent': 100.0, 'n_overloaded_total': 0, 'n_overloaded_trafos': 0, 'n_overloaded_elementos': 0, 'limit_applied': 5, 'overloaded_lines': [], 'overloaded_trafos': []}"
+        }
+      ],
+      "final_text": "En la red **CR_Min**, bajo el escenario de demanda mínima, **no hay ningún elemento sobrecargado** con cargabilidad superior al 100 %. Esto aplica tanto a líneas como a transformadores.\n\nResumen del flujo de potencia (Newton-Raphson, 4 iteraciones):\n\n| Parámetro | Valor |\n|---|---|\n| Convergencia | Sí |\n| Barras con resultado | 513 / 524 |\n| Cargabilidad máxima de líneas | 74.39 % |\n| Cargabilidad máxima de transformadores | 88.01 % |\n| V mín observado | 0.9697 pu |\n| V máx observado | 1.0444 pu |\n\nEl elemento más cargado de la red es un transformador al **88.01 %**, que se mantiene dentro del límite operacional. Ninguna línea supera el **74.39 %** de carga. La red CR_Min opera con holgura en el escenario de demanda mínima.\n\n> **Nota:** Las 11 barras sin resultado (524 − 513) corresponden a 3 unidades no despachadas y 8 devanados terciarios desactivados; esto es normal en el modelo operativo de Costa Rica y no representa un problema numérico.",
+      "usage": {
+        "input_tokens": 19220,
+        "output_tokens": 455
+      },
+      "costo_usd": 0.064485,
+      "elapsed_s": 9.67227053642273,
+      "error": null
+    },
+    {
+      "escenario": "CR_Med",
+      "consulta_id": "Q1_resumen",
+      "query": "Carga la red CR_Med y dame un resumen del estado: ¿convergió el flujo? ¿cuál es el rango de tensiones (Vmin, Vmax)? ¿cuál es la carga máxima de líneas y de transformadores?",
+      "iterations": 2,
+      "stop_reason": "end_turn",
+      "tool_calls": [
+        {
+          "name": "run_power_flow",
+          "input": {
+            "network": "CR_Med"
+          },
+          "result": "{'network': 'CR_Med', 'converged': True, 'iterations_nr': 4, 'n_buses': 524, 'n_buses_with_result': 513, 'n_lines': 137, 'n_trafos': 256, 'v_min_pu': 0.9624327396904085, 'v_max_pu': 1.0527138762719979, 'max_line_loading_percent': 56.203795383344, 'max_trafo_loading_percent': 87.8635714592534}"
+        }
+      ],
+      "final_text": "Aquí está el resumen del estado de la red **CR_Med** tras ejecutar el flujo de potencia Newton-Raphson:\n\n---\n\n## Resumen del estado — Red CR_Med\n\n| Parámetro | Valor |\n|---|---|\n| **Convergencia** | Sí |\n| **Iteraciones Newton-Raphson** | 4 |\n| **Número de barras** | 524 (513 con resultado) |\n| **Número de líneas** | 137 |\n| **Número de transformadores** | 256 |\n\n> Las 11 barras sin resultado corresponden a 3 unidades no despachadas y 8 devanados terciarios desactivados; es el comportamiento esperado del modelo CR.\n\n---\n\n### Perfil de tensiones\n\n| Indicador | Valor (pu) |\n|---|---|\n| **Vmin** | 0.9624 pu |\n| **Vmax** | 1.0527 pu |\n\nEl perfil de tensiones se mantiene dentro de un rango razonablemente acotado para este escenario de demanda media. Nótese que el Vmax observado (1.0527 pu) supera levemente el umbral operacional estándar de 1.05 pu, lo que podría implicar algunas barras en sobretensión.\n\n---\n\n### Cargabilidad de elementos serie\n\n| Elemento | Carga máxima (%) |\n|---|---|\n| **Líneas** | 56.20 % |\n| **Transformadores** | 87.86 % |\n\n- Ninguna línea supera el 100 % de carga en el estado base.\n- Los transformadores presentan una carga máxima de **87.86 %**, lo que indica margen reducido pero sin sobrecarga en el escenario actual.\n\n---\n\n**Conclusión:** La red CR_Med converge en 4 iteraciones y opera sin sobrecargas en el estado base. El punto de mayor atención es el transformador más cargado (87.86 %), que opera cerca de su límite térmico. Si desea profundizar, puedo identificar las barras con violaciones de tensión o los elementos más cargados.",
+      "usage": {
+        "input_tokens": 12670,
+        "output_tokens": 610
+      },
+      "costo_usd": 0.04716,
+      "elapsed_s": 12.521368980407715,
+      "error": null
+    },
+    {
+      "escenario": "CR_Med",
+      "consulta_id": "Q2_subtensiones",
+      "query": "Para la red CR_Med, ¿cuántas barras presentan violaciones de tensión? Lista las 5 más severas y comenta el patrón si lo hay.",
+      "iterations": 3,
+      "stop_reason": "end_turn",
+      "tool_calls": [
+        {
+          "name": "run_power_flow",
+          "input": {
+            "network": "CR_Med"
+          },
+          "result": "{'network': 'CR_Med', 'converged': True, 'iterations_nr': 4, 'n_buses': 524, 'n_buses_with_result': 513, 'n_lines': 137, 'n_trafos': 256, 'v_min_pu': 0.9624327396904085, 'v_max_pu': 1.0527138762719979, 'max_line_loading_percent': 56.203795383344, 'max_trafo_loading_percent': 87.8635714592534}"
+        },
+        {
+          "name": "get_voltage_violations",
+          "input": {
+            "limit": 5
+          },
+          "result": "{'network': 'CR_Med', 'v_min_threshold': 0.95, 'v_max_threshold': 1.05, 'n_violations_total': 1, 'n_subtension': 0, 'n_sobretension': 1, 'limit_applied': 5, 'orden': 'por desviación absoluta respecto al umbral violado, de mayor a menor, mezclando subtensiones y sobretensiones', 'violations': [{'bus_index': 54780, 'vm_pu': 1.0527138762719979, 'tipo': 'sobretension', 'desviacion_pu': 0.00271, 'nombre': 'COYT1T'}], 'top5_subtension': [], 'top5_sobretension': [{'bus_index': 54780, 'vm_pu': 1.0527138762719979, 'tipo': 'sobretension', 'desviacion_pu': 0.00271, 'nombre': 'COYT1T'}]}"
+        }
+      ],
+      "final_text": "Aquí están los resultados del análisis para la red **CR_Med**.\n\n---\n\n## Flujo de potencia — CR_Med\n\n| Parámetro | Valor |\n|---|---|\n| Convergencia | Sí |\n| Iteraciones Newton-Raphson | 4 |\n| Barras totales / con resultado | 524 / 513 |\n| V mín observado | 0.9624 pu |\n| V máx observado | 1.0527 pu |\n| Carga máx. líneas | 56.20 % |\n| Carga máx. transformadores | 87.86 % |\n\n> **Nota sobre las 11 barras sin resultado:** corresponden a 3 unidades no despachadas y 8 devanados terciarios desactivados por despacho operativo. No se contabilizan como violaciones.\n\n---\n\n## Violaciones de tensión (umbral: 0.95 – 1.05 pu)\n\n| Conteo | Valor |\n|---|---|\n| **Total de barras con violación** | **1** |\n| Subtensiones (< 0.95 pu) | 0 |\n| Sobretensiones (> 1.05 pu) | 1 |\n\n### Las 5 más severas (solo hay 1)\n\n| Rank | Bus index | Nombre | Tensión (pu) | Tipo | Desviación |\n|---|---|---|---|---|---|\n| 1 | 54780 | COYT1T | 1.0527 pu | Sobretensión | +0.0027 pu |\n\n---\n\n## Comentario sobre el patrón\n\nEl escenario de **demanda media (CR_Med)** presenta un perfil de tensión notablemente sano:\n\n- **Solo 1 barra viola** los límites operacionales estándar, y lo hace de forma **marginal**: la barra **COYT1T** (índice 54780) supera el techo de 1.05 pu por apenas **0.0027 pu (0.27 %)**.\n- No hay ninguna subtensión, lo que indica que la red está bien soportada en reactivo para este nivel de carga.\n- La ausencia de violaciones generalizadas contrasta con lo que típicamente se observa en escenarios de demanda máxima (CR_Max), donde el estrés sobre el perfil de tensión suele ser mayor.\n- La convergencia en **4 iteraciones** de Newton-Raphson refleja un sistema bien condicionado numéricamente para este escenario.\n\nEn síntesis, CR_Med opera en condiciones muy próximas al óptimo de tensión, con una única desviación puntual y de magnitud despreciable desde el punto de vista operativo.",
+      "usage": {
+        "input_tokens": 19432,
+        "output_tokens": 844
+      },
+      "costo_usd": 0.070956,
+      "elapsed_s": 18.657644987106323,
+      "error": null
+    },
+    {
+      "escenario": "CR_Med",
+      "consulta_id": "Q3_sobrecargas",
+      "query": "En la red CR_Med, ¿hay líneas sobrecargadas (cargabilidad mayor a 100%)? Si las hay, lista hasta 5; si no, confírmalo explícitamente.",
+      "iterations": 3,
+      "stop_reason": "end_turn",
+      "tool_calls": [
+        {
+          "name": "run_power_flow",
+          "input": {
+            "network": "CR_Med"
+          },
+          "result": "{'network': 'CR_Med', 'converged': True, 'iterations_nr': 4, 'n_buses': 524, 'n_buses_with_result': 513, 'n_lines': 137, 'n_trafos': 256, 'v_min_pu': 0.9624327396904085, 'v_max_pu': 1.0527138762719979, 'max_line_loading_percent': 56.203795383344, 'max_trafo_loading_percent': 87.8635714592534}"
+        },
+        {
+          "name": "get_overloaded_lines",
+          "input": {
+            "limit": 5
+          },
+          "result": "{'network': 'CR_Med', 'loading_threshold_percent': 100.0, 'n_overloaded_total': 0, 'n_overloaded_trafos': 0, 'n_overloaded_elementos': 0, 'limit_applied': 5, 'overloaded_lines': [], 'overloaded_trafos': []}"
+        }
+      ],
+      "final_text": "En la red **CR_Med**, con el flujo de potencia convergido en **4 iteraciones** de Newton-Raphson, **no hay ningún elemento sobrecargado** por encima del 100 % de cargabilidad.\n\nLos resultados son los siguientes:\n\n| Indicador | Valor |\n|---|---|\n| Líneas sobrecargadas (> 100 %) | 0 |\n| Transformadores sobrecargados (> 100 %) | 0 |\n| Cargabilidad máxima en líneas | 56.20 % |\n| Cargabilidad máxima en transformadores | 87.86 % |\n\nLa línea más cargada alcanza apenas el **56.20 %** de su capacidad, y el transformador más cargado llega al **87.86 %**, ambos dentro de los límites operacionales. La red CR_Med opera en este escenario de demanda media sin sobrecargas en ninguno de sus 137 líneas ni en sus 256 transformadores.",
+      "usage": {
+        "input_tokens": 19218,
+        "output_tokens": 372
+      },
+      "costo_usd": 0.063234,
+      "elapsed_s": 7.8644187450408936,
+      "error": null
+    },
+    {
+      "escenario": "CR_Max",
+      "consulta_id": "Q1_resumen",
+      "query": "Carga la red CR_Max y dame un resumen del estado: ¿convergió el flujo? ¿cuál es el rango de tensiones (Vmin, Vmax)? ¿cuál es la carga máxima de líneas y de transformadores?",
+      "iterations": 2,
+      "stop_reason": "end_turn",
+      "tool_calls": [
+        {
+          "name": "run_power_flow",
+          "input": {
+            "network": "CR_Max"
+          },
+          "result": "{'network': 'CR_Max', 'converged': True, 'iterations_nr': 4, 'n_buses': 524, 'n_buses_with_result': 513, 'n_lines': 137, 'n_trafos': 256, 'v_min_pu': 0.9647165525976795, 'v_max_pu': 1.0466897022097892, 'max_line_loading_percent': 63.43843307512698, 'max_trafo_loading_percent': 87.55907828617431}"
+        }
+      ],
+      "final_text": "Aquí está el resumen del estado de la red **CR_Max** tras ejecutar el flujo de potencia Newton-Raphson:\n\n---\n\n## Resumen de Estado — Red CR_Max\n\n| Parámetro | Valor |\n|---|---|\n| **Convergencia** | Sí |\n| **Iteraciones Newton-Raphson** | 4 |\n| **Barras totales** | 524 |\n| **Barras con resultado** | 513 |\n| **Líneas** | 137 |\n| **Transformadores** | 256 |\n\n> **Nota:** Las 11 barras sin resultado corresponden a 3 unidades no despachadas y 8 devanados terciarios desactivados por despacho operativo. Es un comportamiento esperado del modelo CR.\n\n---\n\n## Perfil de Tensiones\n\n| Indicador | Valor (pu) |\n|---|---|\n| **Vmin** | 0.9647 pu |\n| **Vmax** | 1.0467 pu |\n\nEl rango de tensiones observado se encuentra dentro del rango estándar operacional [0.95 – 1.05] pu, lo cual es un resultado favorable para el escenario de demanda máxima.\n\n---\n\n## Cargabilidad de Elementos Serie\n\n| Tipo de elemento | Carga máxima (%) |\n|---|---|\n| **Líneas** | 63.44 % |\n| **Transformadores** | 87.56 % |\n\n---\n\n### Observaciones técnicas\n\n- El flujo convergió en **4 iteraciones**, lo que indica un buen condicionamiento numérico de la red en este escenario.\n- Ningún elemento supera el 100 % de carga en el caso base: la línea más cargada llega al **63.44 %** y el transformador más cargado al **87.56 %**, ambos dentro de límites operacionales.\n- El perfil de tensiones es notablemente compacto para una red de 524 barras, con Vmin = 0.9647 pu y Vmax = 1.0467 pu. Para confirmar si existen violaciones puntuales del rango [0.95 – 1.05] pu, se puede ejecutar un análisis detallado de violaciones de tensión.",
+      "usage": {
+        "input_tokens": 12671,
+        "output_tokens": 641
+      },
+      "costo_usd": 0.047628,
+      "elapsed_s": 12.416527032852173,
+      "error": null
+    },
+    {
+      "escenario": "CR_Max",
+      "consulta_id": "Q2_subtensiones",
+      "query": "Para la red CR_Max, ¿cuántas barras presentan violaciones de tensión? Lista las 5 más severas y comenta el patrón si lo hay.",
+      "iterations": 3,
+      "stop_reason": "end_turn",
+      "tool_calls": [
+        {
+          "name": "run_power_flow",
+          "input": {
+            "network": "CR_Max"
+          },
+          "result": "{'network': 'CR_Max', 'converged': True, 'iterations_nr': 4, 'n_buses': 524, 'n_buses_with_result': 513, 'n_lines': 137, 'n_trafos': 256, 'v_min_pu': 0.9647165525976795, 'v_max_pu': 1.0466897022097892, 'max_line_loading_percent': 63.43843307512698, 'max_trafo_loading_percent': 87.55907828617431}"
+        },
+        {
+          "name": "get_voltage_violations",
+          "input": {
+            "limit": 5
+          },
+          "result": "{'network': 'CR_Max', 'v_min_threshold': 0.95, 'v_max_threshold': 1.05, 'n_violations_total': 0, 'n_subtension': 0, 'n_sobretension': 0, 'limit_applied': 5, 'orden': 'por desviación absoluta respecto al umbral violado, de mayor a menor, mezclando subtensiones y sobretensiones', 'violations': [], 'top5_subtension': [], 'top5_sobretension': []}"
+        }
+      ],
+      "final_text": "El flujo de potencia convergió en **4 iteraciones de Newton-Raphson** sobre las 524 barras de la red CR_Max (513 con resultado activo). Los resultados son los siguientes:\n\n---\n\n## Resultado: Sin violaciones de tensión\n\n| Indicador | Valor |\n|---|---|\n| Barras con resultado | 513 |\n| Violaciones totales | **0** |\n| Subtensiones (< 0.95 pu) | 0 |\n| Sobretensiones (> 1.05 pu) | 0 |\n| V mínima observada | 0.9647 pu |\n| V máxima observada | 1.0467 pu |\n\n---\n\n## Interpretación\n\nLa red CR_Max, en el escenario de **demanda máxima**, opera completamente dentro del rango operacional estándar [0.95 – 1.05] pu. Esto es un resultado notable, ya que:\n\n- La tensión mínima observada (0.9647 pu) supera el umbral inferior con un margen de **0.0147 pu (1.47 %)**.\n- La tensión máxima observada (1.0467 pu) se mantiene por debajo del umbral superior con un margen de **0.0033 pu (0.33 %)**, lo que indica que la red opera cerca del límite superior pero sin violarlo.\n\n**Patrón general:** El perfil de tensión es notablemente compacto y bien regulado para una red de 524 barras. La cargabilidad máxima de líneas (63.44 %) y transformadores (87.56 %) indica que la red tiene capacidad de transporte disponible, lo que contribuye a mantener los perfiles de tensión dentro de rango. El escenario de demanda máxima, paradójicamente, puede beneficiarse de una generación bien despachada que soporte la tensión en toda la red.\n\n> **Nota:** Las 11 barras sin resultado (524 − 513) corresponden a 3 unidades no despachadas y 8 devanados terciarios desactivados por diseño operativo; no representan un problema numérico ni se contabilizan como violaciones.",
+      "usage": {
+        "input_tokens": 19316,
+        "output_tokens": 710
+      },
+      "costo_usd": 0.06859799999999999,
+      "elapsed_s": 16.42129945755005,
+      "error": null
+    },
+    {
+      "escenario": "CR_Max",
+      "consulta_id": "Q3_sobrecargas",
+      "query": "En la red CR_Max, ¿hay líneas sobrecargadas (cargabilidad mayor a 100%)? Si las hay, lista hasta 5; si no, confírmalo explícitamente.",
+      "iterations": 3,
+      "stop_reason": "end_turn",
+      "tool_calls": [
+        {
+          "name": "run_power_flow",
+          "input": {
+            "network": "CR_Max"
+          },
+          "result": "{'network': 'CR_Max', 'converged': True, 'iterations_nr': 4, 'n_buses': 524, 'n_buses_with_result': 513, 'n_lines': 137, 'n_trafos': 256, 'v_min_pu': 0.9647165525976795, 'v_max_pu': 1.0466897022097892, 'max_line_loading_percent': 63.43843307512698, 'max_trafo_loading_percent': 87.55907828617431}"
+        },
+        {
+          "name": "get_overloaded_lines",
+          "input": {
+            "limit": 5
+          },
+          "result": "{'network': 'CR_Max', 'loading_threshold_percent': 100.0, 'n_overloaded_total': 0, 'n_overloaded_trafos': 0, 'n_overloaded_elementos': 0, 'limit_applied': 5, 'overloaded_lines': [], 'overloaded_trafos': []}"
+        }
+      ],
+      "final_text": "En la red **CR_Max**, con el flujo de potencia convergido en **4 iteraciones** de Newton-Raphson, **no hay ningún elemento sobrecargado** (cargabilidad > 100 %).\n\nLos resultados confirman:\n\n| Categoría | Elementos sobrecargados |\n|---|---|\n| Líneas (137 en total) | 0 |\n| Transformadores (256 en total) | 0 |\n| **Total** | **0** |\n\nLos valores máximos de cargabilidad observados son:\n\n| Tipo de elemento | Cargabilidad máxima |\n|---|---|\n| Líneas | 63.44 % |\n| Transformadores | 87.56 % |\n\nAmbos valores se mantienen holgadamente por debajo del umbral del 100 %, por lo que la red CR_Max opera sin sobrecargas en ninguno de sus 393 elementos serie (137 líneas + 256 transformadores).",
+      "usage": {
+        "input_tokens": 19220,
+        "output_tokens": 357
+      },
+      "costo_usd": 0.063015,
+      "elapsed_s": 8.995166778564453,
+      "error": null
+    }
+  ],
+  "totales": {
+    "input_tokens": 153726,
+    "output_tokens": 5368,
+    "costo_usd": 0.541698
+  }
+}
