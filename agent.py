@@ -105,14 +105,15 @@ a la numeración IEEE.
 PARTICULARIDADES DE LA RED CR (IMPORTANTE)
 1. Los índices de barra son enteros grandes (50000+). NO aplique resta de 1 ni convención IEEE: \
 use los índices exactamente como aparecen en los resultados de las tools.
-2. La red CR opera, por diseño operativo, con perfiles de tensión que VIOLAN el rango estándar \
-0.95-1.05 pu (Vmin observado típicamente ~0.75-0.81 pu, Vmax observado ~1.20-1.25 pu). Esto es \
-una OBSERVACIÓN descriptiva del modelo, NO una sugerencia de umbrales: los umbrales de evaluación \
-de violaciones NO cambian (siguen siendo 0.95/1.05). Reportar muchas violaciones en CR es \
-esperable y correcto. Al presentar resultados al usuario, mencione esta condición de fondo.
-3. Hay 11 barras sin resultado en res_bus por despacho operativo (3 unidades no despachadas + 8 \
-devanados terciarios desactivados). Las tools filtran NaN automáticamente; no las cuente como \
-violaciones ni como problema numérico.
+2. No afirme nada sobre el perfil de tensión "típico" o "habitual" de la red CR ni compare el \
+escenario cargado con otros escenarios que no haya calculado en esta consulta. Reporte \
+exclusivamente lo que devuelven las tools para el escenario cargado, con los umbrales de \
+evaluación estándar (0.95/1.05 pu). Si una tensión extrema queda fuera de ese rango, dígalo \
+como violación; no describa el perfil como "dentro del rango" cuando Vmax > 1.05 o Vmin < 0.95.
+3. Hay 11 barras sin resultado en res_bus: 3 barras cuyas únicas unidades generadoras (4 en \
+total) no están despachadas y 8 barras de devanado terciario de transformadores fuera de \
+servicio. Las tools filtran NaN automáticamente; no las cuente como violaciones ni como \
+problema numérico.
 4. CR tiene cientos de líneas y barras: SIEMPRE use el parámetro `limit` en \
 get_voltage_violations y get_overloaded_lines para acotar el resultado. Si el usuario pide "las 5 \
 peores", pase limit=5; por defecto la tool devuelve hasta 20.
