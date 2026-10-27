@@ -223,10 +223,11 @@ def main():
         print("  {}: {} subtensiones con el modelo A contra {} con el modelo B.".format(
             red, sub[0], sub[1]))
     print()
-    print("  El conteo de subtensiones —la métrica que compara la validación—")
-    print("  depende de la representación de frontera. Igualar esa condición")
-    print("  entre GridMind y ETAP es un paso previo obligatorio: sin eso, la")
-    print("  comparación mide una diferencia de modelado y no de cálculo.")
+    dmax = t3["Diferencia máxima (pu)"].max()
+    print("  Diferencia máxima de tensión entre ambas representaciones: {:.4f} pu.".format(dmax))
+    print("  Con el modelo verificado, la representación casi no cambia el flujo")
+    print("  del caso base. Aun así conviene usar la misma representación en")
+    print("  GridMind y en ETAP, porque en cortocircuito sí pesa.")
     print()
 
     salida = "sensibilidad_frontera.xlsx"

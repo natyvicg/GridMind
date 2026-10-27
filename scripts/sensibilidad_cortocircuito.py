@@ -14,10 +14,9 @@ importa: barre la potencia de cortocircuito asumida y mide el efecto
 sobre las corrientes de falla, separando las barras de interconexión del
 resto de la red.
 
-Resultado esperado: el efecto es local. Variar el supuesto en dos órdenes
-de magnitud mueve las corrientes de las barras de interconexión de forma
-proporcional, pero deja la mediana del resto de la red prácticamente
-igual. Eso acota la conclusión del estudio sin invalidarlo.
+Con el modelo verificado (revisión 73a3451 en adelante), el supuesto
+domina la corriente en las cinco barras de interconexión y mueve alrededor
+de 10 % la mediana y la máxima del resto de la red en todo el barrido.
 
 Salida
 ------
@@ -110,10 +109,10 @@ def main():
     print("  Barras de interconexión: la corriente varía {:+.1f} %".format(var_inter))
     print("  Resto de la red:         la mediana varía {:+.1f} %".format(var_resto))
     print()
-    print("Conclusión: el supuesto domina localmente y es prácticamente")
-    print("irrelevante para el resto de la red. Las conclusiones del estudio")
-    print("son válidas fuera de las barras de interconexión; en esas cinco")
-    print("barras el resultado debe presentarse como dependiente del supuesto.")
+    print("Lectura: el supuesto domina la corriente en las barras de")
+    print("interconexión y mueve la mediana del resto de la red en el")
+    print("porcentaje indicado arriba. Debe declararse con cada resultado y")
+    print("fijarse igual en GridMind y en ETAP antes de comparar.")
     print("-" * 78)
 
     salida = "sensibilidad_cortocircuito.xlsx"
