@@ -1,0 +1,1111 @@
+
+  ╔══════════════════════════════════════════════════════════╗
+  ║                     GridMind v1.4.2                      ║
+  ║      Agente de IA para análisis de redes eléctricas      ║
+  ╚══════════════════════════════════════════════════════════╝
+
+  GridMind recibe consultas en lenguaje natural, razona
+  sobre el problema y ejecuta simulaciones en PandaPower
+  para entregar resultados numéricos reales.
+
+  ──────────────────────────────────────────────────────────
+  Ejemplos de consultas:
+
+    > Carga la red IEEE_14 y dame un resumen del estado
+    > ¿Cuáles barras tienen violaciones de tensión en CR_Max?
+    > Desconecta la línea 1-5 de IEEE_14 y analiza el impacto
+    > Corré un cortocircuito trifásico en CR_Med y dame las 5 barras
+      con mayor corriente de falla
+
+  ──────────────────────────────────────────────────────────
+  Comandos:
+
+    /redes       Ver las 18 redes disponibles
+    /guardar     Exportar la sesión a HTML
+    /historial   Consultas realizadas en esta sesión
+    /reset       Descargar la red actual y olvidar el historial
+    /olvidar     Olvidar la conversación, conservando la red
+    /ayuda       Más información sobre GridMind
+    /salir       Terminar sesión
+
+
+Tú: Cargá IEEE_14 y dame el resumen del flujo de potencia y las violaciones de tensión con los umbrales estándar.
+
+GridMind está pensando...
+
+  [tool_use] run_power_flow({'network': 'IEEE_14'})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] get_voltage_violations({})
+
+GridMind: Aquí está el análisis completo de la red IEEE_14.
+
+---
+
+Resumen del Flujo de Potencia — IEEE_14
+
+| Parámetro | Valor |
+|---|---|
+| Convergencia | Sí |
+| Iteraciones Newton-Raphson | 3 |
+| Número de barras | 14 |
+| Número de líneas | 15 |
+| Número de transformadores | 5 |
+| Tensión mínima | 1.0100 pu |
+| Tensión máxima | 1.0900 pu |
+| Carga máxima de líneas | 1.51 % |
+| Carga máxima de transformadores | 0.45 % |
+
+El flujo convergió en 3 iteraciones de Newton-Raphson. Las líneas y transformadores están muy por debajo de su capacidad nominal. Sin embargo, el perfil de tensión presenta sobretensiones generalizadas.
+
+---
+
+Violaciones de Tensión (umbrales estándar: 0.95 – 1.05 pu)
+
+| # | Índice interno | Barra IEEE | Tensión (pu) | Tipo | Desviación (pu) |
+|---|---|---|---|---|---|
+| 1 | 7 | 8 | 1.0900 | Sobretensión | +0.0400 |
+| 2 | 5 | 6 | 1.0700 | Sobretensión | +0.0200 |
+| 3 | 6 | 7 | 1.0615 | Sobretensión | +0.0115 |
+| 4 | 0 | 1 | 1.0600 | Sobretensión | +0.0100 |
+| 5 | 10 | 11 | 1.0569 | Sobretensión | +0.0069 |
+| 6 | 8 | 9 | 1.0559 | Sobretensión | +0.0059 |
+| 7 | 11 | 12 | 1.0552 | Sobretensión | +0.0052 |
+| 8 | 9 | 10 | 1.0510 | Sobretensión | +0.0010 |
+| 9 | 12 | 13 | 1.0504 | Sobretensión | +0.0004 |
+
+---
+
+Resumen de violaciones
+
+| Tipo | Cantidad |
+|---|---|
+| Subtensiones (< 0.95 pu) | 0 |
+| Sobretensiones (> 1.05 pu) | 9 |
+| Total | 9 |
+
+Observaciones
+
+- 9 de las 14 barras presentan sobretensión respecto al umbral estándar de 1.05 pu.
+- La violación más severa se da en la barra 8 (índice 7), con 1.0900 pu, es decir, +0.0400 pu por encima del límite.
+- Le siguen las barras 6 (1.0700 pu) y 7 (1.0615 pu).
+- No se registran subtensiones: todas las barras superan el 0.95 pu.
+- La red opera con carga muy baja en líneas y transformadores (máximo 1.51 %), lo que es consistente con el perfil de alta tensión observado.
+
+   [agente: 3 iter | NR: 3 iter | 2 tools | 20,882 tokens | $0.0745 | 27.7s | sesión: $0.0745]
+
+Tú: Desconectá la línea entre las barras 1 y 2 de IEEE_14, volvé a correr el flujo y decime qué cambió: barras fuera de rango y elementos sobrecargados. Luego reconectala.
+
+GridMind está pensando...
+
+  [tool_use] disconnect_line({'line_index': 0})
+  [tool_use] run_power_flow({})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] get_voltage_violations({})
+  [tool_use] get_overloaded_lines({})
+  [tool_use] reconnect_line({'line_index': 0})
+  [tool_use] run_power_flow({})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+
+GridMind: La línea L1-2 ha sido reconectada y el flujo restaurado. A continuación el análisis comparativo completo.
+
+---
+
+Comparativa: Base vs. Contingencia L1-2 abierta
+
+| Parámetro | Estado base | L1-2 desconectada | Cambio |
+|---|---|---|---|
+| Convergencia | Sí | Sí | — |
+| Iteraciones NR | 3 | 4 | +1 |
+| V mín (pu) | 1.0100 | 0.9935 | −0.0165 |
+| V máx (pu) | 1.0900 | 1.0900 | Sin cambio |
+| Carga máx. líneas (%) | 1.51 | 2.51 | +1.00 pp |
+| Carga máx. trafos (%) | 0.45 | 0.51 | +0.06 pp |
+| Violaciones de tensión | 9 | 6 | −3 |
+| Sobrecargas (líneas + trafos) | 0 | 0 | Sin cambio |
+
+---
+
+Violaciones de tensión con L1-2 desconectada
+
+Solo sobretensiones (0 subtensiones):
+
+| # | Índice interno | Barra IEEE | Tensión (pu) | Desviación (pu) |
+|---|---|---|---|---|
+| 1 | 7 | 8 | 1.0900 | +0.0400 |
+| 2 | 5 | 6 | 1.0700 | +0.0200 |
+| 3 | 0 | 1 | 1.0600 | +0.0100 |
+| 4 | 11 | 12 | 1.0546 | +0.0046 |
+| 5 | 6 | 7 | 1.0535 | +0.0035 |
+| 6 | 10 | 11 | 1.0528 | +0.0028 |
+
+---
+
+Sobrecargas
+
+Ningún elemento sobrecargado (líneas ni transformadores) en la contingencia.
+
+---
+
+Conclusiones
+
+- La red mantiene convergencia con L1-2 abierta, aunque Newton-Raphson requirió una iteración adicional (4 vs. 3), lo que refleja un sistema levemente más difícil de resolver.
+- La tensión mínima bajó de 1.0100 a 0.9935 pu, acercándose al límite inferior de 0.95 pu, aunque sin violarlo. La pérdida de L1-2 redistribuye flujos y reduce el soporte de tensión en algunas barras.
+- Las violaciones se redujeron de 9 a 6: desaparecieron las sobretensiones en las barras 9 (1.0559 pu), 10 (1.0510 pu) y 13 (1.0552 pu), que en la contingencia quedaron por debajo de 1.05 pu.
+- No hay sobrecargas en ningún escenario: la red IEEE_14 opera con márgenes de capacidad muy holgados.
+- La línea L1-2 ha sido reconectada exitosamente y el estado base restaurado (3 iteraciones NR, V mín = 1.0100 pu).
+
+   [agente: 6 iter | NR: 3 iter | contexto: 1 | 6 tools | 47,491 tokens | $0.1568 | 26.1s | sesión: $0.2313]
+
+Tú: Aumentá en 50 % la carga de la barra 3 de IEEE_14 y decime cómo cambian la tensión mínima y la cargabilidad máxima respecto al caso base.
+
+GridMind está pensando...
+
+  [tool_use] run_power_flow({})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] modify_load({'bus_index': 2, 'scale_factor': 1.5})
+  [tool_use] run_power_flow({})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] get_voltage_violations({})
+  [tool_use] get_overloaded_lines({})
+
+GridMind: Aquí está el análisis comparativo completo.
+
+---
+
+Modificación de carga — Barra 3 (IEEE_14)
+
+La carga en la barra 3 (índice interno 2) fue escalada ×1.5:
+
+| Magnitud | Valor anterior | Valor nuevo |
+|---|---|---|
+| P (MW) | 94.20 | 141.30 |
+| Q (MVAr) | 19.00 | 28.50 |
+
+---
+
+Comparativa: Caso base vs. Carga barra 3 +50 %
+
+| Parámetro | Caso base | Carga +50 % | Cambio |
+|---|---|---|---|
+| Convergencia | Sí | Sí | — |
+| Iteraciones NR | 3 | 3 | Sin cambio |
+| V mín (pu) | 1.0100 | 1.0100 | Sin cambio |
+| V máx (pu) | 1.0900 | 1.0900 | Sin cambio |
+| Carga máx. líneas (%) | 1.51 | 1.91 | +0.40 pp |
+| Carga máx. trafos (%) | 0.45 | 0.46 | +0.01 pp |
+| Violaciones de tensión | 9 | 9 | Sin cambio |
+| Sobrecargas (líneas + trafos) | 0 | 0 | Sin cambio |
+
+---
+
+Violaciones de tensión — Carga barra 3 +50 %
+
+Solo sobretensiones (0 subtensiones). Ordenadas por desviación absoluta:
+
+| # | Índice interno | Barra IEEE | Tensión (pu) | Desviación (pu) |
+|---|---|---|---|---|
+| 1 | 7 | 8 | 1.0900 | +0.0400 |
+| 2 | 5 | 6 | 1.0700 | +0.0200 |
+| 3 | 6 | 7 | 1.0609 | +0.0109 |
+| 4 | 0 | 1 | 1.0600 | +0.0100 |
+| 5 | 10 | 11 | 1.0565 | +0.0065 |
+| 6 | 11 | 12 | 1.0552 | +0.0052 |
+| 7 | 8 | 9 | 1.0551 | +0.0051 |
+| 8 | 9 | 10 | 1.0503 | +0.0003 |
+| 9 | 12 | 13 | 1.0502 | +0.0002 |
+
+Ningún elemento sobrecargado (líneas ni transformadores).
+
+---
+
+Conclusiones
+
+- Tensión mínima: se mantiene en 1.0100 pu, sin variación. La barra 3 es una barra de carga conectada a generadores fuertes que sostienen el perfil de tensión.
+- Cargabilidad máxima de líneas: aumenta de 1.51 % a 1.91 % (+0.40 pp), reflejando el mayor flujo de potencia activa hacia la barra 3. Aun así, permanece muy por debajo del límite térmico.
+- Cargabilidad máxima de transformadores: prácticamente sin cambio (0.45 % → 0.46 %).
+- Violaciones de tensión: el número y la severidad de las sobretensiones no varía significativamente; la barra 3 no es un nodo que influya en las tensiones altas del sistema (barras 6, 7 y 8), que están controladas por los generadores y compensadores de la zona.
+- La red absorbe el incremento de demanda sin problemas operacionales en este escenario.
+
+   [agente: 5 iter | NR: 3 iter | contexto: 2 | 5 tools | 42,103 tokens | $0.1414 | 24.9s | sesión: $0.3728]
+
+Tú: Cargá IEEE_118 y listá los 10 elementos más cargados.
+
+GridMind está pensando...
+
+  [tool_use] run_power_flow({'network': 'IEEE_118'})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] get_overloaded_lines({'loading_threshold': 0, 'limit': 10})
+
+GridMind: ---
+
+Flujo de Potencia — IEEE_118
+
+| Parámetro | Valor |
+|---|---|
+| Convergencia | Sí |
+| Iteraciones Newton-Raphson | 3 |
+| Número de barras | 118 |
+| Número de líneas | 173 |
+| Número de transformadores | 13 |
+| Tensión mínima | 0.9430 pu |
+| Tensión máxima | 1.0500 pu |
+| Carga máxima de líneas | 4.48 % |
+| Carga máxima de transformadores | 3.59 % |
+
+El flujo convergió en 3 iteraciones de Newton-Raphson. Ningún elemento supera el 100 % de cargabilidad; la red opera con amplio margen térmico.
+
+---
+
+Top 10 elementos más cargados — IEEE_118
+
+La tabla combina líneas y transformadores, ordenados de mayor a menor cargabilidad tal como los devuelve la herramienta:
+
+| # | Tipo | Índice interno | Barra DE (idx) | Barra A (idx) | Cargabilidad (%) |
+|---|---|---|---|---|---|
+| 1 | Línea | 6 | 7 | 8 | 4.48 |
+| 2 | Línea | 7 | 8 | 9 | 4.36 |
+| 3 | Transformador | 0 | 7 (HV) | 4 (LV) | 3.59 |
+| 4 | Transformador | 12 | 115 (HV) | 67 (LV) | 2.83 |
+| 5 | Transformador | 3 | 37 (HV) | 36 (LV) | 2.82 |
+| 6 | Línea | 34 | 25 | 29 | 2.28 |
+| 7 | Transformador | 2 | 29 (HV) | 16 (LV) | 2.55 |
+| 8 | Línea | 128 | 88 | 91 | 2.03 |
+| 9 | Línea | 89 | 37 | 64 | 2.00 |
+| 10 | Línea | 90 | 63 | 64 | 2.00 |
+
+**Nota:** Los índices de barra son 0-indexed (internos de PandaPower). La barra IEEE N corresponde al índice interno N−1.
+
+---
+
+Observaciones
+
+- Ningún elemento está sobrecargado (todos por debajo del 100 %).
+- Los dos elementos más cargados son las líneas entre barras IEEE 8-9 y 9-10 (índices internos 7-8 y 8-9), con cargabilidades de 4.48 % y 4.36 % respectivamente.
+- El transformador de mayor carga (índice 0, entre barras internas 7→4, es decir IEEE 8→5) alcanza el 3.59 %.
+- La red IEEE_118 opera en condiciones muy holgadas en este caso base.
+
+   [agente: 3 iter | NR: 3 iter | contexto: 3 | 2 tools | 27,456 tokens | $0.0942 | 25.7s | sesión: $0.4670]
+
+Tú: Calculá el cortocircuito trifásico en IEEE_14.
+
+GridMind está pensando...
+
+  [tool_use] run_power_flow({'network': 'IEEE_14'})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] run_short_circuit({'fault_type': '3ph'})
+
+GridMind: Cortocircuito trifásico — IEEE_14: resultado esperado
+
+El cálculo no es posible para la red IEEE_14, y ese es el comportamiento correcto.
+
+Motivo técnico
+
+La norma IEC 60909 requiere la impedancia de las fuentes de la red para calcular la corriente inicial simétrica de cortocircuito (Ik''). La red IEEE_14 fue publicada exclusivamente como un benchmark de flujo de carga y no incluye esos parámetros. Concretamente, faltan:
+
+| Parámetro faltante | Detalle |
+|---|---|
+| Potencia de cortocircuito de la red externa (`s_sc_max_mva`) | 1 alimentador externo sin dato |
+| Reactancia subtransitoria de generadores (`xdss_pu`) | 4 máquinas sin dato |
+| Potencia base de máquina (`sn_mva`) | 4 de 4 máquinas sin valor |
+| Tensión nominal de máquina (`vn_kv`) | 4 máquinas sin dato |
+| Factor de potencia nominal (`cos_phi`) | 4 máquinas sin dato |
+
+Alternativas disponibles
+
+1. Redes de Costa Rica (CR_Min, CR_Med, CR_Max): son modelos de operación real que sí incluyen la impedancia de las 108 máquinas y la potencia de cortocircuito de las interconexiones. Son las únicas redes del catálogo donde el cálculo IEC 60909 es válido.
+
+2. Cálculo indicativo con parámetros típicos de literatura: si lo desea de forma explícita, puedo ejecutarlo con supuestos estándar, pero el resultado quedará rotulado como indicativo y no representativo de la red IEEE_14 real.
+
+¿Desea que ejecute el cortocircuito sobre alguna de las redes CR, o prefiere el cálculo indicativo con parámetros típicos?
+
+   [agente: 3 iter | NR: 3 iter | contexto: 4 | 2 tools | 28,294 tokens | $0.0928 | 19.5s | sesión: $0.5597]
+
+Tú: Hacé lo mismo.
+
+GridMind está pensando...
+
+
+GridMind: La consulta "hacé lo mismo" en este contexto se refiere a calcular el cortocircuito trifásico, pero la red actualmente cargada sigue siendo IEEE_14 — la misma sobre la que acabo de reportar que el cálculo no es posible.
+
+El resultado no cambia: IEEE_14 no incluye los parámetros de fuente que requiere IEC 60909 (reactancias subtransitorias, potencias nominales de máquina, potencia de cortocircuito de la red externa). Volver a invocar la herramienta devolvería el mismo error.
+
+¿Qué necesitás?
+
+Si querés proceder, tenés dos opciones:
+
+| Opción | Descripción |
+|---|---|
+| A | Cambiar a una red CR (CR_Min, CR_Med o CR_Max) y calcular el cortocircuito real con datos de operación. |
+| B | Solicitar explícitamente un cálculo indicativo con parámetros típicos de literatura sobre IEEE_14, con el entendido de que el resultado estará rotulado como basado en supuestos y no es representativo de la red. |
+
+¿Cuál preferís?
+
+   [agente: 1 iter | contexto: 4 | 0 tools | 9,016 tokens | $0.0308 | 7.7s | sesión: $0.5905]
+
+Tú: /reset
+  Red descargada. La próxima consulta cargará la red desde cero.
+  También se olvidaron 6 consulta(s) del contexto.
+
+Tú: Cargá la red CR_Max y dame el resumen del flujo de potencia: tensión mínima y máxima en pu, cuántas barras tiene y cuántas tienen resultado, iteraciones de Newton-Raphson y la cargabilidad máxima de líneas y de transformadores.
+
+GridMind está pensando...
+
+  [tool_use] run_power_flow({'network': 'CR_Max'})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+
+GridMind: Aquí está el resumen completo del flujo de potencia para la red CR_Max:
+
+---
+
+Resumen del Flujo de Potencia — CR_Max
+
+| Parámetro | Valor |
+|---|---|
+| Convergencia | Sí |
+| Iteraciones Newton-Raphson | 4 |
+| Barras totales | 524 |
+| Barras con resultado | 513 |
+| Barras sin resultado | 11 (*) |
+
+Perfil de Tensión
+
+| Indicador | Valor (pu) |
+|---|---|
+| Tensión mínima | 0.9647 pu |
+| Tensión máxima | 1.0467 pu |
+
+Cargabilidad Máxima
+
+| Tipo de elemento | Cargabilidad máxima |
+|---|---|
+| Líneas (137 en total) | 63.44 % |
+| Transformadores (256 en total) | 87.56 % |
+
+---
+
+Notas:
+- Las 11 barras sin resultado corresponden a 3 barras cuyas unidades generadoras no están despachadas y 8 barras de devanado terciario de transformadores fuera de servicio; no representan un problema numérico.
+- El flujo convergió en 4 iteraciones, lo que indica un buen condicionamiento de la red para este escenario de demanda máxima.
+- Ningún elemento supera el 100 % de cargabilidad en el estado base: la línea más cargada llega al 63.44 % y el transformador más cargado al 87.56 %.
+- Las tensiones extremas observadas (0.9647 pu y 1.0467 pu) se encuentran dentro del rango operacional estándar [0.95 – 1.05 pu], aunque la tensión mínima está próxima al límite inferior y la máxima supera levemente el límite superior. Para un análisis detallado de violaciones, se puede ejecutar `get_voltage_violations`.
+
+   [agente: 2 iter | NR: 4 iter | 1 tools | 13,306 tokens | $0.0471 | 15.4s | sesión: $0.6376]
+
+Tú: ¿Cuántas barras tienen subtensión (menos de 0,95 pu)? Listá las 5 peores con su índice, nombre y tensión.
+
+GridMind está pensando...
+
+  [tool_use] get_voltage_violations({'limit': 5})
+
+GridMind: Para la red CR_Max en el estado base actual, no existe ninguna barra con subtensión (V < 0.95 pu) ni con sobretensión (V > 1.05 pu).
+
+| Indicador | Resultado |
+|---|---|
+| Barras con subtensión (V < 0.95 pu) | 0 |
+| Barras con sobretensión (V > 1.05 pu) | 0 |
+| Total de violaciones | 0 |
+
+Esto es consistente con el perfil de tensión reportado en el flujo de potencia:
+
+- Tensión mínima observada: 0.9647 pu (por encima del umbral de 0.95 pu)
+- Tensión máxima observada: 1.0467 pu (por debajo del umbral de 1.05 pu)
+
+La red CR_Max opera en el escenario de demanda máxima sin violaciones de tensión bajo los umbrales operacionales estándar [0.95, 1.05] pu.
+
+   [agente: 2 iter | contexto: 1 | 1 tools | 14,136 tokens | $0.0464 | 8.3s | sesión: $0.6840]
+
+Tú: ¿Cuántas barras tienen sobretensión (más de 1,05 pu)? Listá las 5 peores con su índice, nombre y tensión.
+
+GridMind está pensando...
+
+  [salvaguarda] respuesta con cifras sin herramienta; se pide ejecutar herramientas
+  [tool_use] run_power_flow({'network': 'CR_Max'})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] get_voltage_violations({})
+
+GridMind: Los resultados verificados con las herramientas confirman lo siguiente:
+
+---
+
+Violaciones de Tensión — CR_Max (Estado Base)
+
+| Indicador | Resultado |
+|---|---|
+| Barras con sobretensión (V > 1.05 pu) | 0 |
+| Barras con subtensión (V < 0.95 pu) | 0 |
+| Total de violaciones | 0 |
+
+No existe ninguna barra con sobretensión. La tensión máxima observada en la red es 1.0467 pu, que se ubica por debajo del umbral operacional de 1.05 pu. No hay barras que listar entre las "5 peores" porque no hay violaciones de ningún tipo.
+
+   [agente: 4 iter | NR: 4 iter | contexto: 2 | 2 tools | 30,651 tokens | $0.0985 | 10.4s | sesión: $0.7825]
+
+Tú: Listá las 5 líneas y los 5 transformadores con mayor cargabilidad, con su porcentaje.
+
+GridMind está pensando...
+
+  [tool_use] get_overloaded_lines({'loading_threshold': 0, 'limit': 300})
+
+GridMind: Aquí están los rankings de cargabilidad para la red CR_Max en el estado base:
+
+---
+
+Top 5 Líneas con Mayor Cargabilidad — CR_Max
+
+| Rank | Índice línea | Bus origen | Bus destino | Cargabilidad (%) |
+|------|-------------|-----------|------------|-----------------|
+| 1 | 11 | 50054 | 50454 | 63.44 % |
+| 2 | 39 | 50612 | 50614 | 60.59 % |
+| 3 | 13 | 50058 | 50062 | 49.92 % |
+| 4 | 34 | 50454 | 50554 | 46.35 % |
+| 5 | 35 | 50504 | 50604 | 42.35 % |
+
+---
+
+Top 5 Transformadores con Mayor Cargabilidad — CR_Max
+
+| Rank | Índice trafo | Tipo | Bus AT | Bus BT / Bus MT | Cargabilidad (%) |
+|------|-------------|------|--------|----------------|-----------------|
+| 1 | 12 | trafo_2w | 50253 | 50272 | 87.56 % |
+| 2 | 92 | trafo_2w | 58212 | 58237 | 85.13 % |
+| 3 | 6 | trafo_2w | 50103 | 50123 | 81.02 % |
+| 4 | 56 | trafo_2w | 51350 | 51358 | 80.44 % |
+| 5 | 52 | trafo_2w | 51160 | 51170 | 80.04 % |
+
+---
+
+Observaciones:
+- Ningún elemento supera el 100 % de cargabilidad: la red opera sin sobrecargas en el estado base.
+- La línea más cargada alcanza el 63.44 % (índice 11, entre barras 50054 y 50454).
+- El transformador más cargado llega al 87.56 % (índice 12, entre barras 50253 y 50272), siendo el elemento serie con mayor proximidad al límite en toda la red.
+- Los 5 transformadores más cargados son todos de dos devanados (trafo_2w), con cargabilidades entre 80 % y 88 %.
+
+   [agente: 2 iter | contexto: 3 | 1 tools | 35,591 tokens | $0.1152 | 13.1s | sesión: $0.8977]
+
+Tú: Desconectá la línea con mayor cargabilidad, volvé a correr el flujo y decime cuántas barras quedan fuera del rango 0,95 a 1,05 pu, cuál es ahora la cargabilidad máxima y si apareció alguna sobrecarga. Al final reconectá la línea.
+
+GridMind está pensando...
+
+  [tool_use] disconnect_line({'line_index': 11})
+  [tool_use] run_power_flow({})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] get_voltage_violations({'limit': 20})
+  [tool_use] get_overloaded_lines({'limit': 20})
+  [tool_use] reconnect_line({'line_index': 11})
+  [tool_use] run_power_flow({})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+
+GridMind: La línea ha sido reconectada y el estado base restaurado. Aquí el análisis completo:
+
+---
+
+Contingencia N-1: Desconexión de Línea 11 (50054 → 50454)
+
+Comparación de indicadores globales
+
+| Indicador | Estado base | Con línea 11 desconectada | Variación |
+|---|---|---|---|
+| Convergencia | Sí (4 iter.) | Sí (4 iter.) | Sin cambio |
+| Barras con resultado | 513 | 503 | −10 barras (*) |
+| Tensión mínima | 0.9647 pu | 0.9647 pu | Sin cambio |
+| Tensión máxima | 1.0467 pu | 1.0467 pu | Sin cambio |
+| Cargabilidad máx. líneas | 63.44 % | 60.67 % | −2.77 pp |
+| Cargabilidad máx. trafos | 87.56 % | 87.56 % | Sin cambio |
+
+(*) La reducción de 513 a 503 barras con resultado se debe a que la desconexión de la línea deja algunas barras eléctricamente aisladas, sin solución de flujo.
+
+Violaciones de tensión [0.95, 1.05] pu
+
+| Tipo | Cantidad |
+|---|---|
+| Subtensiones (V < 0.95 pu) | 0 |
+| Sobretensiones (V > 1.05 pu) | 0 |
+| Total | 0 |
+
+Sobrecargas (cargabilidad > 100 %)
+
+| Tipo | Cantidad |
+|---|---|
+| Líneas sobrecargadas | 0 |
+| Transformadores sobrecargados | 0 |
+| Total | 0 |
+
+---
+
+Conclusión: La contingencia N-1 sobre la línea más cargada de CR_Max (índice 11, 50054 → 50454) no genera violaciones de tensión ni sobrecargas. La red absorbe la contingencia sin problemas operacionales, aunque 10 barras quedan sin resultado por aislamiento eléctrico. La red ha sido restaurada a su estado base (línea 11 reconectada, 4 iteraciones, cargabilidades originales confirmadas).
+
+   [agente: 6 iter | NR: 4 iter | contexto: 4 | 6 tools | 52,305 tokens | $0.1685 | 18.5s | sesión: $1.0662]
+
+Tú: Calculá el cortocircuito trifásico, caso máximo, según IEC 60909 y dame las 10 barras con mayor corriente inicial simétrica, con su índice, nombre, tensión nominal e I’’k en kA, y la potencia de cortocircuito de la barra de mayor corriente. Indicá los supuestos que usaste.
+
+GridMind está pensando...
+
+  [tool_use] run_power_flow({'network': 'CR_Max'})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] run_short_circuit({'case': 'max', 'fault_type': '3ph', 'limit': 10})
+C:\Users\natyv\anaconda3\envs\gridmind\Lib\site-packages\pandapower\build_branch.py:1434: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  power_station_unit = trafo_df.power_station_unit.fillna(False).values.astype(bool)
+C:\Users\natyv\anaconda3\envs\gridmind\Lib\site-packages\pandapower\build_branch.py:1434: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  power_station_unit = trafo_df.power_station_unit.fillna(False).values.astype(bool)
+C:\Users\natyv\anaconda3\envs\gridmind\Lib\site-packages\pandapower\shortcircuit\currents.py:52: UserWarning: Calculation does not support calculation of voltages and branch powers for grids that have transformers with rated voltages unequal to bus voltages. Change the transformer data ortry using the superposition method by passing 'use_pre_fault_voltage=True'
+  warnings.warn(msg)
+
+GridMind: Aquí los resultados completos:
+
+---
+
+Cortocircuito Trifásico Máximo — CR_Max (IEC 60909)
+
+Norma: IEC 60909 | Tipo de falla: Trifásica (3ph) | Caso: Máximo  
+Fuente de datos: Modelo PSS/E — hoja *Generator Data*, columna *X Source (pu)*
+
+Estadísticas globales
+
+| Indicador | Valor |
+|---|---|
+| I''k máxima (red) | 80.07 kA |
+| I''k mínima (red) | 1.07 kA |
+| I''k mediana (red) | 8.62 kA |
+| Barra de mayor corriente | 55020 (URU13.8A) |
+| Barra de menor corriente | 50542 |
+
+---
+
+Top 10 barras con mayor corriente inicial simétrica I''k
+
+| Rank | Índice barra | Nombre | Vn (kV) | I''k (kA) |
+|------|-------------|--------|---------|----------|
+| 1 | 55020 | URU13.8A | 13.8 | 80.07 |
+| 2 | 55021 | URU13.8B | 13.8 | 80.07 |
+| 3 | 53581 | ESTT2T | 13.8 | 69.47 |
+| 4 | 54230 | CONT1T | 13.8 | 69.45 |
+| 5 | 50380 | BART1T | 13.8 | 68.86 |
+| 6 | 53580 | ESTT1T | 13.8 | 68.31 |
+| 7 | 54231 | CONT2T | 13.8 | 66.51 |
+| 8 | 55070 | GUD13.8A | 13.8 | 64.60 |
+| 9 | 55071 | GUD13.8B | 13.8 | 64.60 |
+| 10 | 55120 | LAN13.8A | 13.8 | 58.19 |
+
+---
+
+Potencia de cortocircuito — Barra de mayor corriente (55020, URU13.8A)
+
+| Parámetro | Valor |
+|---|---|
+| Tensión nominal | 13.8 kV |
+| I''k máxima | 80.07 kA |
+| S''k (potencia de cortocircuito) | 1 913.85 MVA |
+
+---
+
+Supuestos aplicados
+
+1. Resistencia de máquina: El campo *R source (pu)* viene en cero en el modelo; se asume R = X / 20.
+2. Tensión nominal de máquina: Se usa la tensión nominal de la barra de conexión (el modelo no trae campo explícito).
+3. Factor de potencia nominal de máquina: Se asume cos φ = 0.85.
+4. Interconexiones (Nicaragua 1, Nicaragua 2, Panamá 1, Panamá 2, Panamá 3): modeladas como fuentes ideales con S_cc = 2 000 MVA y R/X = 0.1 como parámetro declarado, no como dato del modelo original.
+
+**Nota de corrección de datos:** La herramienta remapeó la impedancia de máquina desde la columna *X Source (pu)* del modelo PSS/E, dado que el campo *Xtran (pu)* (transformador elevador) viene en cero en este modelo.
+
+---
+
+Observación técnica: Las 10 barras con mayor I''k corresponden todas al nivel de 13.8 kV, que es el nivel de tensión de los terminales de los generadores. Esto es esperable: las barras de generación concentran la mayor contribución de corriente de cortocircuito por la proximidad directa a las fuentes.
+
+   [agente: 3 iter | NR: 4 iter | contexto: 4 | 2 tools | 27,228 tokens | $0.0966 | 24.4s | sesión: $1.1628]
+
+Tú: /reset
+  Red descargada. La próxima consulta cargará la red desde cero.
+  También se olvidaron 6 consulta(s) del contexto.
+
+Tú: Cargá la red CR_Med y dame el resumen del flujo de potencia: tensión mínima y máxima en pu, cuántas barras tiene y cuántas tienen resultado, iteraciones de Newton-Raphson y la cargabilidad máxima de líneas y de transformadores.
+
+GridMind está pensando...
+
+  [tool_use] run_power_flow({'network': 'CR_Med'})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+
+GridMind: Aquí está el resumen completo del flujo de potencia para la red CR_Med:
+
+---
+
+Resumen del Flujo de Potencia — CR_Med
+
+| Parámetro | Valor |
+|---|---|
+| Convergencia | Sí |
+| Iteraciones Newton-Raphson | 4 |
+| Barras totales | 524 |
+| Barras con resultado | 513 |
+| Barras sin resultado | 11 (*) |
+
+Perfil de Tensión
+
+| Indicador | Valor (pu) |
+|---|---|
+| Tensión mínima | 0.9624 pu |
+| Tensión máxima | 1.0527 pu |
+
+Cargabilidad Máxima
+
+| Elemento | Cargabilidad máxima |
+|---|---|
+| Líneas (137 en total) | 56.20 % |
+| Transformadores (256 en total) | 87.86 % |
+
+---
+
+Notas:
+- Las 11 barras sin resultado corresponden a 3 barras cuyas unidades generadoras no están despachadas y 8 barras de devanado terciario de transformadores fuera de servicio; no representan un problema numérico.
+- El flujo convergió en 4 iteraciones, lo que indica un buen condicionamiento de la red para este escenario de demanda media.
+- Ninguna línea supera el 100 % de cargabilidad. El transformador más cargado llega al 87.86 %, con margen antes de la sobrecarga.
+- La tensión máxima observada (1.0527 pu) supera levemente el umbral operacional estándar de 1.05 pu; si desea identificar las barras en violación, puedo ejecutar el análisis de violaciones de tensión.
+
+   [agente: 2 iter | NR: 4 iter | 1 tools | 13,254 tokens | $0.0463 | 14.2s | sesión: $1.2091]
+
+Tú: ¿Cuántas barras tienen subtensión (menos de 0,95 pu)? Listá las 5 peores con su índice, nombre y tensión.
+
+GridMind está pensando...
+
+  [tool_use] get_voltage_violations({})
+
+GridMind: En la red CR_Med, con el umbral estándar de 0.95 pu, el resultado es el siguiente:
+
+---
+
+Violaciones de Tensión — CR_Med
+
+| Tipo | Cantidad de barras |
+|---|---|
+| Subtensiones (< 0.95 pu) | 0 |
+| Sobretensiones (> 1.05 pu) | 1 |
+| Total | 1 |
+
+---
+
+Top 5 Subtensiones
+
+No existen barras con subtensión en este escenario. Ninguna de las 513 barras con resultado cae por debajo de 0.95 pu; la tensión mínima observada es 0.9624 pu, que se mantiene dentro del rango operacional.
+
+---
+
+Nota: La única violación presente es una sobretensión en la barra `54780` (COYT1T), con 1.0527 pu, que supera el umbral de 1.05 pu por apenas 0.0027 pu.
+
+   [agente: 2 iter | contexto: 1 | 1 tools | 14,212 tokens | $0.0464 | 6.7s | sesión: $1.2555]
+
+Tú: ¿Cuántas barras tienen sobretensión (más de 1,05 pu)? Listá las 5 peores con su índice, nombre y tensión.
+
+GridMind está pensando...
+
+  [tool_use] get_voltage_violations({})
+
+GridMind: Sobretensiones — CR_Med (umbral: 1.05 pu)
+
+| Tipo | Cantidad de barras |
+|---|---|
+| Sobretensiones (> 1.05 pu) | 1 |
+| Subtensiones (< 0.95 pu) | 0 |
+| Total | 1 |
+
+---
+
+Top 5 Sobretensiones
+
+Solo existe una barra con sobretensión en este escenario:
+
+| Posición | Índice de barra | Nombre | Tensión (pu) | Desviación respecto a 1.05 pu |
+|---|---|---|---|---|
+| 1 | 54780 | COYT1T | 1.0527 pu | +0.0027 pu |
+
+---
+
+Conclusión: El perfil de tensión de CR_Med es muy sólido. La única violación es marginal: la barra COYT1T supera el umbral en apenas 0.0027 pu (0.27 %). No hay subtensiones en ninguna de las 513 barras con resultado.
+
+   [agente: 2 iter | contexto: 2 | 1 tools | 14,922 tokens | $0.0490 | 6.7s | sesión: $1.3045]
+
+Tú: /guardar
+
+  Sesión exportada a: logs\sesion_2026-10-26_1928.html
+  15 consultas | costo total $1.3045 USD
+
+Tú: Listá las 5 líneas y los 5 transformadores con mayor cargabilidad, con su porcentaje.
+
+GridMind está pensando...
+
+  [tool_use] run_power_flow({})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] get_overloaded_lines({'loading_threshold': 0, 'limit': 50})
+
+GridMind: Con los datos obtenidos, presento los rankings solicitados:
+
+---
+
+Top 5 Líneas con Mayor Cargabilidad — CR_Med
+
+| Posición | Índice | Bus Desde | Bus Hasta | Cargabilidad |
+|---|---|---|---|---|
+| 1 | 11 | 50054 | 50454 | 56.20 % |
+| 2 | 34 | 50454 | 50554 | 42.84 % |
+| 3 | 21 | 50160 | 50164 | 42.04 % |
+| 4 | 15 | 50102 | 50103 | 41.38 % |
+| 5 | 35 | 50504 | 50604 | 39.56 % |
+
+---
+
+Top 5 Transformadores con Mayor Cargabilidad — CR_Med
+
+| Posición | Índice | Tipo | Bus AT | Bus BT (/ MT) | Cargabilidad |
+|---|---|---|---|---|---|
+| 1 | 12 | trafo_2w | 50253 | 50272 | 87.86 % |
+| 2 | 92 | trafo_2w | 58212 | 58237 | 85.80 % |
+| 3 | 6 | trafo_2w | 50103 | 50123 | 80.52 % |
+| 4 | 52 | trafo_2w | 51160 | 51170 | 79.51 % |
+| 5 | 46 | trafo_2w | 50900 | 50921 | 77.45 % |
+
+---
+
+Observaciones:
+- Ninguna línea ni transformador supera el 100 % de cargabilidad en el escenario CR_Med: la red opera sin sobrecargas.
+- La línea más cargada (índice 11, entre barras 50054 y 50454) alcanza el 56.20 %, con amplio margen.
+- El transformador más cargado (índice 12, entre barras 50253 y 50272) llega al 87.86 %, siendo el elemento serie con menor margen de toda la red.
+- Los 5 transformadores más cargados son todos de dos devanados (trafo_2w).
+
+   [agente: 3 iter | NR: 4 iter | contexto: 3 | 2 tools | 28,794 tokens | $0.0949 | 13.3s | sesión: $1.3995]
+
+Tú: Cargá la red CR_Min y dame el resumen del flujo de potencia: tensión mínima y máxima en pu, cuántas barras tiene y cuántas tienen resultado, iteraciones de Newton-Raphson y la cargabilidad máxima de líneas y de transformadores.
+
+GridMind está pensando...
+
+  [tool_use] run_power_flow({'network': 'CR_Min'})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+
+GridMind: Aquí está el resumen completo del flujo de potencia para la red CR_Min:
+
+---
+
+Resumen del Flujo de Potencia — CR_Min
+
+| Parámetro | Valor |
+|---|---|
+| Convergencia | Sí |
+| Iteraciones Newton-Raphson | 4 |
+| Barras totales | 524 |
+| Barras con resultado | 513 |
+| Barras sin resultado | 11 (*) |
+
+Perfil de Tensión
+
+| Indicador | Valor (pu) |
+|---|---|
+| Tensión mínima | 0.9697 pu |
+| Tensión máxima | 1.0444 pu |
+
+Cargabilidad Máxima
+
+| Elemento | Cargabilidad máxima |
+|---|---|
+| Líneas (137 en total) | 74.39 % |
+| Transformadores (256 en total) | 88.01 % |
+
+---
+
+Notas:
+- Las 11 barras sin resultado corresponden, al igual que en CR_Med, a 3 barras con generadores no despachados y 8 barras de devanado terciario fuera de servicio.
+- El flujo convergió en 4 iteraciones, igual que CR_Med, lo que indica un condicionamiento numérico consistente entre escenarios.
+- Tanto la tensión mínima (0.9697 pu) como la máxima (1.0444 pu) se encuentran dentro del rango operacional estándar [0.95, 1.05] pu, a diferencia de CR_Med donde había una sobretensión marginal en COYT1T.
+- Ninguna línea supera el 100 % de cargabilidad. El transformador más cargado llega al 88.01 %, con un margen similar al observado en CR_Med (87.86 %).
+
+---
+
+Comparación rápida CR_Min vs CR_Med
+
+| Indicador | CR_Min | CR_Med |
+|---|---|---|
+| Iteraciones NR | 4 | 4 |
+| Vmin (pu) | 0.9697 | 0.9624 |
+| Vmax (pu) | 1.0444 | 1.0527 |
+| Cargabilidad máx. líneas | 74.39 % | 56.20 % |
+| Cargabilidad máx. trafos | 88.01 % | 87.86 % |
+| Sobretensiones | 0 | 1 (COYT1T) |
+| Subtensiones | 0 | 0 |
+
+Un dato llamativo: la cargabilidad máxima de líneas es mayor en CR_Min (74.39 %) que en CR_Med (56.20 %), lo que sugiere que en el escenario de demanda mínima el despacho de generación produce flujos más concentrados en ciertas líneas, aunque sin llegar a sobrecargas.
+
+   [agente: 2 iter | NR: 4 iter | contexto: 4 | 1 tools | 17,268 tokens | $0.0620 | 19.1s | sesión: $1.4615]
+
+Tú: /reset
+  Red descargada. La próxima consulta cargará la red desde cero.
+  También se olvidaron 5 consulta(s) del contexto.
+
+Tú: Cargá la red CR_Min y dame el resumen del flujo de potencia: tensión mínima y máxima en pu, cuántas barras tiene y cuántas tienen resultado, iteraciones de Newton-Raphson y la cargabilidad máxima de líneas y de transformadores.
+
+GridMind está pensando...
+
+  [tool_use] run_power_flow({'network': 'CR_Min'})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+
+GridMind: Aquí está el resumen completo del flujo de potencia para la red CR_Min:
+
+---
+
+Resumen del Flujo de Potencia — CR_Min
+
+| Parámetro | Valor |
+|---|---|
+| Convergencia | Sí |
+| Iteraciones Newton-Raphson | 4 |
+| Barras totales | 524 |
+| Barras con resultado | 513 |
+| Barras sin resultado | 11 (*) |
+
+Perfil de Tensión
+
+| Indicador | Valor (pu) |
+|---|---|
+| Tensión mínima (Vmin) | 0.9697 pu |
+| Tensión máxima (Vmax) | 1.0444 pu |
+
+Cargabilidad Máxima
+
+| Elemento | Cargabilidad máxima (%) |
+|---|---|
+| Líneas | 74.39 % |
+| Transformadores | 88.01 % |
+
+---
+
+Notas:
+
+- (*) Las 11 barras sin resultado corresponden a 3 barras cuyas unidades generadoras no están despachadas en este escenario y 8 barras de devanado terciario de transformadores fuera de servicio. No representan un problema numérico.
+- El flujo convergió en 4 iteraciones, lo que indica un buen condicionamiento de la red para este escenario de demanda mínima.
+- Ningún elemento supera el 100 % de cargabilidad: la red opera sin sobrecargas en este escenario.
+- El perfil de tensión se encuentra dentro del rango operacional estándar [0.95 – 1.05] pu en sus valores extremos globales, aunque puede haber barras individuales que violen esos límites; se requeriría un análisis de violaciones para confirmarlo.
+
+   [agente: 2 iter | NR: 4 iter | 1 tools | 13,253 tokens | $0.0463 | 15.9s | sesión: $1.5078]
+
+Tú: ¿Cuántas barras tienen subtensión (menos de 0,95 pu)? Listá las 5 peores con su índice, nombre y tensión.
+
+GridMind está pensando...
+
+  [tool_use] get_voltage_violations({'limit': 5})
+
+GridMind: La red CR_Min no registra ninguna barra con subtensión bajo el umbral de 0,95 pu, ni tampoco sobretensiones por encima de 1,05 pu.
+
+| Indicador | Valor |
+|---|---|
+| Barras con subtensión (< 0,95 pu) | 0 |
+| Barras con sobretensión (> 1,05 pu) | 0 |
+| Total de violaciones | 0 |
+
+El perfil de tensión de la red en el escenario de demanda mínima se encuentra completamente dentro del rango operacional estándar [0,95 – 1,05] pu, con una tensión mínima observada de 0,9697 pu y una máxima de 1,0444 pu (ambas dentro del rango).
+
+   [agente: 2 iter | contexto: 1 | 1 tools | 14,067 tokens | $0.0455 | 5.9s | sesión: $1.5533]
+
+Tú: ¿Cuántas barras tienen sobretensión (más de 1,05 pu)? Listá las 5 peores con su índice, nombre y tensión.
+
+GridMind está pensando...
+
+  [salvaguarda] respuesta con cifras sin herramienta; se pide ejecutar herramientas
+  [tool_use] get_voltage_violations({})
+
+GridMind: Sobretensiones (> 1,05 pu) — CR_Min
+
+| Indicador | Valor |
+|---|---|
+| Barras con sobretensión (> 1,05 pu) | 0 |
+| Barras con subtensión (< 0,95 pu) | 0 |
+| Total de violaciones | 0 |
+
+La herramienta confirma que no existe ninguna barra con tensión superior a 1,05 pu en la red CR_Min. No hay ranking de las 5 peores sobretensiones que reportar.
+
+   [agente: 3 iter | contexto: 2 | 1 tools | 22,485 tokens | $0.0729 | 9.7s | sesión: $1.6262]
+
+Tú: Listá las 5 líneas y los 5 transformadores con mayor cargabilidad, con su porcentaje.
+
+GridMind está pensando...
+
+  [tool_use] run_power_flow({})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] get_overloaded_lines({'loading_threshold': 0, 'limit': 50})
+
+GridMind: Aquí están los rankings de cargabilidad para la red CR_Min:
+
+---
+
+Top 5 — Líneas con mayor cargabilidad
+
+| Rank | Índice línea | Bus origen | Bus destino | Cargabilidad (%) |
+|------|-------------|-----------|------------|-----------------|
+| 1 | 39 | 50612 | 50614 | 74,39 % |
+| 2 | 13 | 50058 | 50062 | 57,75 % |
+| 3 | 11 | 50054 | 50454 | 44,29 % |
+| 4 | 17 | 50150 | 50800 | 42,38 % |
+| 5 | 15 | 50102 | 50103 | 41,27 % |
+
+---
+
+Top 5 — Transformadores con mayor cargabilidad
+
+| Rank | Índice trafo | Tipo | Bus AT | Bus BT / MT | Cargabilidad (%) |
+|------|-------------|------|--------|-------------|-----------------|
+| 1 | 12 | 2 devanados | 50253 | 50272 | 88,01 % |
+| 2 | 6 | 2 devanados | 50103 | 50123 | 80,30 % |
+| 3 | 52 | 2 devanados | 51160 | 51170 | 80,23 % |
+| 4 | 56 | 2 devanados | 51350 | 51358 | 80,16 % |
+| 5 | 4 | 2 devanados | 50100 | 50121 | 75,27 % |
+
+---
+
+Observaciones:
+- Ningún elemento supera el 100 % de cargabilidad: la red opera sin sobrecargas en el escenario CR_Min.
+- El elemento más cargado de toda la red es el transformador 2W índice 12 (bus 50253 → 50272) con 88,01 %.
+- La línea más cargada es la línea índice 39 (bus 50612 → 50614) con 74,39 %, con margen de seguridad de 25,61 puntos porcentuales respecto al límite térmico.
+- Los cuatro transformadores del top 5 son todos de 2 devanados, con cargabilidades entre 75 % y 88 %, lo que indica que el cuello de botella de la red en este escenario está en la transformación, no en la transmisión.
+
+   [agente: 3 iter | NR: 4 iter | contexto: 3 | 2 tools | 28,356 tokens | $0.0945 | 15.5s | sesión: $1.7207]
+
+Tú: Compará el número de subtensiones y sobretensiones entre CR_Min, CR_Med y CR_Max en una sola tabla.
+
+GridMind está pensando...
+
+  [tool_use] run_power_flow({'network': 'CR_Min'})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] get_voltage_violations({'limit': 100})
+  [tool_use] run_power_flow({'network': 'CR_Med'})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] get_voltage_violations({'limit': 100})
+  [tool_use] run_power_flow({'network': 'CR_Max'})
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+numba cannot be imported and numba functions are disabled.
+Probably the execution is slow.
+Please install numba to gain a massive speedup.
+(or if you prefer slow execution, set the flag numba=False to avoid this warning!)
+  [tool_use] get_voltage_violations({'limit': 100})
+
+GridMind: Aquí está la comparación consolidada de los tres escenarios:
+
+---
+
+Comparación de violaciones de tensión — CR_Min / CR_Med / CR_Max
+Umbrales: [0,95 – 1,05] pu
+
+| Escenario | Vmin observado (pu) | Vmax observado (pu) | Subtensiones (< 0,95 pu) | Sobretensiones (> 1,05 pu) | Total violaciones |
+|-----------|--------------------|--------------------|--------------------------|---------------------------|-------------------|
+| CR_Min | 0,9697 | 1,0444 | 0 | 0 | 0 |
+| CR_Med | 0,9624 | 1,0527 | 0 | 1 | 1 |
+| CR_Max | 0,9647 | 1,0467 | 0 | 0 | 0 |
+
+---
+
+Detalle de la única violación detectada
+
+| Escenario | Bus índice | Nombre | Tensión (pu) | Tipo | Desviación respecto a 1,05 pu |
+|-----------|-----------|--------|-------------|------|-------------------------------|
+| CR_Med | 54780 | COYT1T | 1,0527 | Sobretensión | +0,0027 pu |
+
+---
+
+Observaciones:
+- Los tres escenarios convergen en 4 iteraciones Newton-Raphson, lo que indica un comportamiento numérico consistente.
+- La única violación en toda la comparación es una sobretensión leve (+0,27 %) en la barra COYT1T del escenario de demanda media (CR_Med).
+- Ningún escenario presenta subtensiones bajo 0,95 pu.
+- Paradójicamente, el escenario de demanda máxima (CR_Max) no presenta violaciones, mientras que el de demanda media (CR_Med) sí. Esto puede deberse a diferencias en el despacho de generación y el control de tensión entre escenarios.
+
+   [agente: 7 iter | NR: 4 iter | contexto: 4 | 6 tools | 61,257 tokens | $0.1955 | 46.3s | sesión: $1.9162]
+
+Tú: /guardar
+
+  Sesión exportada a: logs\sesion_2026-10-26_1928.html
+  22 consultas | costo total $1.9162 USD
+
+Tú: /salir
+
+  Sesión: 22 consultas, 68 iteraciones, costo total $1.9162 USD
+
+    s  guardar la sesión en HTML y salir  (por defecto)
+    n  salir SIN guardar
+    c  cancelar y seguir trabajando
+
+  Opción [s/n/c]: s
+
+  Sesión exportada a: logs\sesion_2026-10-26_1928.html
+
+Hasta luego.
